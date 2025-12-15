@@ -1,0 +1,29 @@
+{
+  "connector_id": "email-smtp",
+  "name": "Email SMTP Connector",
+  "type": "smtp",
+  "description": "SMTP connector for sending emails",
+  "config": {
+    "host": "{{SMTP_HOST}}",
+    "port": 587,
+    "username": "{{SMTP_USERNAME}}",
+    "password_secret": "smtp_password",
+    "encryption": "starttls",
+    "from_address": "{{DEFAULT_FROM_EMAIL}}",
+    "from_name": "{{ORG_NAME}}"
+  },
+  "capabilities": ["email:send", "email:send-bulk"],
+  "rate_limits": {
+    "per_second": 10,
+    "per_minute": 100,
+    "per_hour": 1000
+  },
+  "mock_mode": {
+    "enabled": "{{DEMO_MODE}}",
+    "log_only": true,
+    "response": {
+      "success": true,
+      "message_id": "mock-{{UUID}}"
+    }
+  }
+}

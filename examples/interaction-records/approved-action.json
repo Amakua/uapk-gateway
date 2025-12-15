@@ -1,0 +1,55 @@
+{
+  "record_id": "ir-abc123def456ghi789",
+  "timestamp": "2024-01-15T14:30:00.000Z",
+  "agent_id": "customer-support-bot",
+  "organization_id": "org-acme",
+  "capability_token_id": "cap-xyz789abc123",
+  "action": "email:send",
+  "request": {
+    "parameters": {
+      "to": "customer@example.com",
+      "subject": "Re: Your order #12345",
+      "body": "Dear Customer,\n\nYour order has been shipped and will arrive within 3-5 business days.\n\nTracking number: 1Z999AA10123456784\n\nBest regards,\nACME Support"
+    },
+    "context": {
+      "conversation_id": "conv-support-98765",
+      "reason": "Customer requested shipping update for order #12345",
+      "metadata": {
+        "ticket_id": "TICKET-54321",
+        "customer_tier": "premium"
+      }
+    }
+  },
+  "decision": "approved",
+  "decision_reason": "All policy checks passed",
+  "policy_evaluations": [
+    {
+      "policy_id": "pol-capability-check",
+      "policy_name": "capability-check",
+      "result": "pass",
+      "reason": "Agent has email:send capability"
+    },
+    {
+      "policy_id": "pol-rate-limit",
+      "policy_name": "email-rate-limit",
+      "result": "pass",
+      "reason": "8/100 actions used this hour"
+    },
+    {
+      "policy_id": "pol-business-hours",
+      "policy_name": "business-hours-only",
+      "result": "pass",
+      "reason": "Current time is within allowed hours"
+    }
+  ],
+  "result": {
+    "success": true,
+    "data": {
+      "message_id": "msg-email-789xyz",
+      "sent_at": "2024-01-15T14:30:01.234Z"
+    }
+  },
+  "duration_ms": 1234,
+  "signature": "hmac-sha256:a1b2c3d4e5f6...",
+  "previous_hash": "sha256:9f8e7d6c5b4a..."
+}

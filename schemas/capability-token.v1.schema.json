@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uapk.dev/schemas/capability-token.v1.json",
+  "title": "UAPK Capability Token",
+  "description": "JSON schema for UAPK Capability Token v1",
+  "type": "object",
+  "required": ["token_id", "agent_id", "capabilities", "issued_at", "expires_at"],
+  "properties": {
+    "token_id": {
+      "type": "string",
+      "pattern": "^cap-[a-zA-Z0-9]{12,32}$",
+      "description": "Unique token identifier"
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Agent this token is issued to"
+    },
+    "organization_id": {
+      "type": "string",
+      "pattern": "^org-[a-z0-9-]+$",
+      "description": "Organization context"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$"
+      },
+      "minItems": 1,
+      "description": "Granted capabilities"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Token issue timestamp"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Token expiration timestamp"
+    },
+    "issued_by": {
+      "type": "string",
+      "description": "Issuer (operator ID or 'system')"
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Token-specific constraints",
+      "properties": {
+        "max_actions": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum total actions with this token"
+        },
+        "max_actions_per_hour": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "allowed_parameters": {
+          "type": "object",
+          "description": "Parameter restrictions"
+        }
+      }
+    },
+    "revoked": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether token has been revoked"
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Revocation timestamp"
+    },
+    "revoked_reason": {
+      "type": "string",
+      "description": "Reason for revocation"
+    }
+  }
+}

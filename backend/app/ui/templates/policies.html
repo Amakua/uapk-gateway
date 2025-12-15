@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Policies</h1>
+
+<div class="card">
+    <div class="placeholder">
+        <p>No policies configured yet.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+            Policies define what actions agents can perform and under what conditions.
+        </p>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1rem; background: #f1f5f9;">
+    <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Coming in v0.2</h3>
+    <ul style="margin-left: 1.5rem; color: var(--text-muted);">
+        <li>Policy editor with validation</li>
+        <li>Rate limiting rules</li>
+        <li>Capability restrictions</li>
+        <li>Time-based access controls</li>
+        <li>Human-in-the-loop approval workflows</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Agents</h1>
+
+<div class="card">
+    <div class="placeholder">
+        <p>No agents registered yet.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+            Agents must register with a valid UAPK Manifest to interact with the gateway.
+        </p>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1rem; background: #f1f5f9;">
+    <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Coming in v0.2</h3>
+    <ul style="margin-left: 1.5rem; color: var(--text-muted);">
+        <li>Agent registration and manifest validation</li>
+        <li>Capability token management</li>
+        <li>Budget allocation and tracking</li>
+        <li>Agent activity monitoring</li>
+    </ul>
+</div>
+{% endblock %}

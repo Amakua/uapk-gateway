@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uapk.dev/schemas/interaction-record.v0.1.json",
+  "title": "UAPK Interaction Record v0.1",
+  "description": "Tamper-evident audit log entry for agent actions",
+  "type": "object",
+  "required": ["record_id", "timestamp", "manifest_id", "agent_id", "action", "request", "decision", "signature"],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "pattern": "^ir-[a-zA-Z0-9]{20,32}$",
+      "description": "Unique record identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record creation timestamp (ISO 8601 UTC)"
+    },
+    "manifest_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UAPK Manifest ID"
+    },
+    "org_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Organization context"
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,62}$",
+      "description": "Agent that made the request"
+    },
+    "capability_token_id": {
+      "type": "string",
+      "pattern": "^cap-[a-zA-Z0-9]{16,32}$",
+      "description": "Capability token used (if any)"
+    },
+    "action": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$",
+      "description": "Action type requested"
+    },
+    "tool": {
+      "type": "string",
+      "description": "Tool name used for execution"
+    },
+    "request": {
+      "type": "object",
+      "description": "Original action request",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "description": "Action parameters"
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "conversation_id": { "type": "string" },
+            "session_id": { "type": "string" },
+            "reason": { "type": "string" },
+            "trace_id": { "type": "string" },
+            "metadata": { "type": "object" }
+          }
+        },
+        "client_ip": {
+          "type": "string"
+        },
+        "user_agent": {
+          "type": "string"
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["approved", "denied", "pending", "timeout", "error"],
+      "description": "Policy decision"
+    },
+    "decision_reason": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Human-readable explanation for decision"
+    },
+    "policy_evaluations": {
+      "type": "array",
+      "description": "Results of policy rule evaluations",
+      "items": {
+        "type": "object",
+        "required": ["policy_id", "rule_id", "result"],
+        "properties": {
+          "policy_id": { "type": "string" },
+          "policy_name": { "type": "string" },
+          "rule_id": { "type": "string" },
+          "result": {
+            "type": "string",
+            "enum": ["pass", "fail", "skip", "error"]
+          },
+          "effect": {
+            "type": "string",
+            "enum": ["allow", "deny", "escalate"]
+          },
+          "message": { "type": "string" },
+          "evaluation_ms": { "type": "integer" }
+        }
+      }
+    },
+    "escalation": {
+      "type": "object",
+      "description": "Escalation details (if action was escalated)",
+      "properties": {
+        "escalated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "escalated_to": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "resolved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "resolved_by": {
+          "type": "string"
+        },
+        "resolution": {
+          "type": "string",
+          "enum": ["approved", "denied", "timeout"]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "description": "Execution result (if approved and executed)",
+      "properties": {
+        "success": { "type": "boolean" },
+        "data": { "type": "object" },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" },
+            "details": { "type": "object" }
+          }
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "description": "Cost tracking",
+      "properties": {
+        "estimated_usd": { "type": "number" },
+        "actual_usd": { "type": "number" },
+        "tokens_used": { "type": "integer" }
+      }
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total processing time in milliseconds"
+    },
+    "signature": {
+      "type": "string",
+      "description": "HMAC-SHA256 signature of record contents"
+    },
+    "previous_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of previous record (chain integrity)"
+    },
+    "record_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of this record"
+    }
+  }
+}

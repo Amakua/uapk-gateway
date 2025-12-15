@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card">
+        <h3 style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">Active Agents</h3>
+        <p style="font-size: 2rem; font-weight: 700;">--</p>
+    </div>
+    <div class="card">
+        <h3 style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">Actions Today</h3>
+        <p style="font-size: 2rem; font-weight: 700;">--</p>
+    </div>
+    <div class="card">
+        <h3 style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">Policy Violations</h3>
+        <p style="font-size: 2rem; font-weight: 700;">--</p>
+    </div>
+    <div class="card">
+        <h3 style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">System Status</h3>
+        <p><span class="status-badge status-ok">Healthy</span></p>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Recent Activity</h2>
+    <div class="placeholder">
+        <p>No activity recorded yet.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Agent interactions will appear here once configured.</p>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+    <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Quick Actions</h2>
+    <p style="color: var(--text-muted);">
+        Welcome to UAPK Gateway v0.1.0. This operator dashboard is under development.
+        Use the <a href="/docs">API documentation</a> to explore available endpoints.
+    </p>
+</div>
+{% endblock %}

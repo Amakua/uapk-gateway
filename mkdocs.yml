@@ -1,0 +1,179 @@
+site_name: UAPK Gateway
+site_description: Universal Agent Protocol Kit Gateway - Policy enforcement and audit logging for AI agents
+site_author: UAPK Team
+site_url: https://uapk.dev
+
+repo_name: uapk/gateway
+repo_url: https://github.com/uapk/gateway
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - announce.dismiss
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: octicons/tag-16
+      abstract: octicons/checklist-16
+      info: octicons/info-16
+      tip: octicons/squirrel-16
+      success: octicons/check-16
+      question: octicons/question-16
+      warning: octicons/alert-16
+      failure: octicons/x-circle-16
+      danger: octicons/zap-16
+      bug: octicons/bug-16
+      example: octicons/beaker-16
+      quote: octicons/quote-16
+
+plugins:
+  - search
+  - social
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: uapk
+      repo: gateway
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - docs/includes/abbreviations.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Concepts:
+      - concepts/index.md
+      - UAPK Manifest: concepts/manifest.md
+      - Capability Tokens: concepts/capabilities.md
+      - Policy Decisions: concepts/decisions.md
+      - Approval Workflow: concepts/approvals.md
+      - Audit Logs: concepts/logs.md
+  - API Reference:
+      - api/index.md
+      - Authentication: api/authentication.md
+      - Organizations & Users: api/organizations.md
+      - Manifests: api/manifests.md
+      - Gateway Actions: api/gateway.md
+      - Approvals: api/approvals.md
+      - Audit Logs: api/logs.md
+  - Operator Guide:
+      - operator/index.md
+      - Dashboard Overview: operator/dashboard.md
+      - Managing Approvals: operator/approvals.md
+      - Audit & Compliance: operator/audit.md
+      - Incident Response: operator/incidents.md
+  - Security:
+      - security/index.md
+      - Threat Model: security/threat-model.md
+      - Data Handling: security/data-handling.md
+      - Key Management: security/key-management.md
+  - Deployment:
+      - deployment/index.md
+      - Single VM Setup: deployment/single-vm.md
+      - Caddy Configuration: deployment/caddy.md
+      - Backups & Recovery: deployment/backups.md
+      - Monitoring: deployment/monitoring.md
+  - Business:
+      - business/index.md
+      - Pricing: business/pricing.md
+      - Pilot Program: business/pilot.md
+      - Support: business/support.md
+  - 47ers Library: 47ers.md
+  - Roadmap: roadmap.md
+  - Demo Walkthrough: demo.md
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/uapk/gateway
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/uapkdev
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/uapk
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+copyright: Copyright &copy; 2024 UAPK Project - Apache 2.0 License

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "agent": {
+    "id": "customer-support-bot",
+    "name": "Customer Support Bot",
+    "version": "1.0.0",
+    "description": "AI agent that handles customer support inquiries via email and CRM",
+    "organization": "org-acme",
+    "team": "team-support"
+  },
+  "capabilities": {
+    "requested": [
+      "email:send",
+      "email:read",
+      "crm:read",
+      "crm:update",
+      "knowledge-base:search"
+    ]
+  },
+  "constraints": {
+    "max_actions_per_hour": 100,
+    "max_actions_per_day": 500,
+    "require_human_approval": [
+      "crm:delete",
+      "email:send-bulk"
+    ],
+    "allowed_hours": {
+      "start": "08:00",
+      "end": "20:00",
+      "timezone": "America/New_York"
+    }
+  },
+  "metadata": {
+    "contact": "support-team@acme.com",
+    "documentation": "https://docs.acme.com/agents/support-bot"
+  }
+}

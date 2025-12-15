@@ -1,0 +1,224 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-vendor-due-diligence",
+    "name": "Vendor Due Diligence Gate",
+    "category": "compliance",
+    "description": "Automates third-party vendor risk assessment and ongoing monitoring"
+  },
+  "agent": {
+    "id": "vendor-diligence-agent",
+    "name": "Vendor Due Diligence Agent",
+    "version": "1.0.0",
+    "description": "Assesses vendor risk, monitors compliance, and manages vendor relationships",
+    "organization": "{{ORG_SLUG}}",
+    "team": "compliance"
+  },
+  "roles": [
+    {
+      "id": "vendor-screener",
+      "name": "Vendor Screener",
+      "description": "Screens new vendors for risk indicators"
+    },
+    {
+      "id": "document-analyst",
+      "name": "Document Analyst",
+      "description": "Analyzes vendor documentation and certifications"
+    },
+    {
+      "id": "risk-monitor",
+      "name": "Risk Monitor",
+      "description": "Continuously monitors vendor risk profile"
+    },
+    {
+      "id": "contract-reviewer",
+      "name": "Contract Reviewer",
+      "description": "Reviews contract terms for compliance"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "vendor:lookup",
+      "vendor:screen",
+      "document:request",
+      "document:analyze",
+      "document:verify-cert",
+      "email:send",
+      "email:read",
+      "crm:read",
+      "crm:update",
+      "crm:create",
+      "contract:review",
+      "contract:flag",
+      "report:generate",
+      "alert:send"
+    ]
+  },
+  "action_types": {
+    "initial_screening": {
+      "description": "Initial vendor screening and lookup",
+      "tools": ["vendor:lookup", "vendor:screen"],
+      "auto_approve": true,
+      "rate_limit": 200
+    },
+    "request_documents": {
+      "description": "Request compliance documents from vendor",
+      "tools": ["email:send", "document:request"],
+      "auto_approve": true,
+      "rate_limit": 100
+    },
+    "analyze_documents": {
+      "description": "Analyze vendor documents and certifications",
+      "tools": ["document:analyze", "document:verify-cert"],
+      "auto_approve": true,
+      "rate_limit": 200
+    },
+    "assess_risk": {
+      "description": "Calculate vendor risk score",
+      "tools": ["crm:update"],
+      "auto_approve": true,
+      "rate_limit": 200
+    },
+    "approve_low_risk_vendor": {
+      "description": "Auto-approve low-risk vendors",
+      "tools": ["crm:update", "email:send"],
+      "auto_approve": true,
+      "conditions": {"risk_tier": "low"}
+    },
+    "approve_medium_risk_vendor": {
+      "description": "Approve medium-risk with conditions",
+      "tools": ["crm:update", "email:send"],
+      "require_approval": true,
+      "escalation_reason": "Medium-risk vendor requires procurement review"
+    },
+    "escalate_high_risk_vendor": {
+      "description": "Escalate high-risk vendor for review",
+      "tools": ["crm:update", "email:send", "alert:send"],
+      "require_approval": true,
+      "escalation_reason": "High-risk vendor requires legal and compliance review"
+    },
+    "contract_review": {
+      "description": "Review vendor contract for compliance terms",
+      "tools": ["contract:review", "contract:flag"],
+      "auto_approve": true,
+      "rate_limit": 50
+    },
+    "flag_contract_issues": {
+      "description": "Flag contract issues for legal review",
+      "tools": ["contract:flag", "email:send", "alert:send"],
+      "require_approval": true,
+      "escalation_reason": "Contract issues require legal review"
+    },
+    "ongoing_monitoring": {
+      "description": "Monitor vendor for risk changes",
+      "tools": ["vendor:screen", "crm:update"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "trigger_reassessment": {
+      "description": "Trigger vendor reassessment",
+      "tools": ["crm:update", "email:send"],
+      "auto_approve": true,
+      "conditions": {"monitoring_alert": true}
+    },
+    "terminate_relationship": {
+      "description": "Recommend vendor termination",
+      "tools": ["crm:update", "email:send", "alert:send"],
+      "require_approval": true,
+      "escalation_reason": "Vendor termination requires executive approval"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 100,
+    "max_actions_per_day": 500,
+    "require_human_approval": [
+      "contract:flag"
+    ],
+    "escalate_when": {
+      "risk_tier": "high",
+      "critical_vendor": true,
+      "contract_value_exceeds": 100000,
+      "data_access": "sensitive",
+      "offshore_vendor": true,
+      "certification_expired": true,
+      "negative_news": true
+    },
+    "reassessment_schedule": {
+      "critical": "quarterly",
+      "high": "semi-annually",
+      "medium": "annually",
+      "low": "bi-annually"
+    }
+  },
+  "connectors": {
+    "vendor_screening": {
+      "type": "http",
+      "config_ref": "connectors/dnb_api.json"
+    },
+    "cert_verification": {
+      "type": "http",
+      "config_ref": "connectors/securityscorecard_api.json"
+    },
+    "contract_analysis": {
+      "type": "http",
+      "config_ref": "connectors/docusign_api.json"
+    },
+    "email": {
+      "type": "smtp",
+      "config_ref": "connectors/email_smtp.json"
+    },
+    "crm": {
+      "type": "http",
+      "config_ref": "connectors/crm_api.json"
+    }
+  },
+  "workflows": {
+    "new_vendor_assessment": {
+      "steps": [
+        {"action": "initial_screening", "auto": true},
+        {"action": "request_documents", "auto": true},
+        {"action": "analyze_documents", "auto": true},
+        {"action": "assess_risk", "auto": true},
+        {"action": "contract_review", "auto": true},
+        {"action": "approve_low_risk_vendor", "if": "risk_tier == low"},
+        {"action": "approve_medium_risk_vendor", "if": "risk_tier == medium"},
+        {"action": "escalate_high_risk_vendor", "if": "risk_tier == high"}
+      ]
+    },
+    "periodic_review": {
+      "steps": [
+        {"action": "ongoing_monitoring", "auto": true},
+        {"action": "trigger_reassessment", "if": "risk_change_detected"},
+        {"action": "request_documents", "if": "certs_expiring"},
+        {"action": "analyze_documents", "auto": true},
+        {"action": "assess_risk", "auto": true}
+      ]
+    }
+  },
+  "risk_scoring": {
+    "categories": {
+      "financial_stability": {"weight": 20},
+      "security_posture": {"weight": 25},
+      "compliance_certs": {"weight": 20},
+      "data_handling": {"weight": 20},
+      "reputation": {"weight": 15}
+    },
+    "required_certs": {
+      "critical_vendors": ["SOC2", "ISO27001"],
+      "data_processors": ["SOC2", "GDPR-compliant"],
+      "financial": ["PCI-DSS", "SOC2"]
+    },
+    "tiers": {
+      "low": {"score": "0-30", "auto_approve": true},
+      "medium": {"score": "31-60", "require_review": true},
+      "high": {"score": "61-100", "require_escalation": true}
+    }
+  },
+  "metadata": {
+    "contact": "vendor-management@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/vendor-diligence",
+    "compliance_notes": "Supports SOX, GDPR, and industry-specific regulations",
+    "estimated_roi": "Reduces vendor assessment time by 60%, improves risk visibility"
+  }
+}

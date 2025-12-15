@@ -1,0 +1,49 @@
+{
+  "connector_id": "stripe-api",
+  "name": "Stripe Payment Connector",
+  "type": "http",
+  "description": "Stripe API connector for payment processing",
+  "config": {
+    "base_url": "https://api.stripe.com/v1",
+    "auth_type": "bearer",
+    "api_key_secret_ref": "stripe_api_key"
+  },
+  "capabilities": ["payment:receive", "payment:refund", "payment:check-status"],
+  "endpoints": {
+    "create_payment_intent": {
+      "method": "POST",
+      "path": "/payment_intents"
+    },
+    "capture_payment": {
+      "method": "POST",
+      "path": "/payment_intents/{intent_id}/capture"
+    },
+    "refund": {
+      "method": "POST",
+      "path": "/refunds"
+    },
+    "get_payment": {
+      "method": "GET",
+      "path": "/payment_intents/{intent_id}"
+    }
+  },
+  "rate_limits": {
+    "per_second": 25,
+    "per_minute": 100
+  },
+  "mock_mode": {
+    "enabled": "{{DEMO_MODE}}",
+    "responses": {
+      "create_payment_intent": {
+        "id": "pi_mock_{{UUID}}",
+        "status": "requires_payment_method",
+        "amount": "{{amount}}",
+        "currency": "usd"
+      },
+      "capture_payment": {
+        "id": "{{intent_id}}",
+        "status": "succeeded"
+      }
+    }
+  }
+}

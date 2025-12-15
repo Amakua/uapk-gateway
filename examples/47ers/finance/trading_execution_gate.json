@@ -1,0 +1,222 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-trading-execution",
+    "name": "Trading Execution Gate",
+    "category": "finance",
+    "description": "Governs algorithmic trading with position limits, risk checks, and human escalation"
+  },
+  "agent": {
+    "id": "trading-execution-agent",
+    "name": "Trading Execution Agent",
+    "version": "1.0.0",
+    "description": "Executes trades within defined risk parameters with real-time monitoring",
+    "organization": "{{ORG_SLUG}}",
+    "team": "trading"
+  },
+  "roles": [
+    {
+      "id": "signal-processor",
+      "name": "Signal Processor",
+      "description": "Processes trading signals and validates opportunities"
+    },
+    {
+      "id": "risk-checker",
+      "name": "Risk Checker",
+      "description": "Validates trades against risk limits"
+    },
+    {
+      "id": "order-executor",
+      "name": "Order Executor",
+      "description": "Executes approved orders on exchanges"
+    },
+    {
+      "id": "position-monitor",
+      "name": "Position Monitor",
+      "description": "Monitors positions and P&L in real-time"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "market:quote",
+      "market:depth",
+      "order:submit",
+      "order:cancel",
+      "order:modify",
+      "position:read",
+      "position:close",
+      "risk:check",
+      "risk:calculate-var",
+      "alert:send",
+      "report:generate",
+      "audit:log"
+    ]
+  },
+  "action_types": {
+    "get_market_data": {
+      "description": "Fetch market quotes and depth",
+      "tools": ["market:quote", "market:depth"],
+      "auto_approve": true,
+      "rate_limit": 10000
+    },
+    "validate_signal": {
+      "description": "Validate trading signal",
+      "tools": ["risk:check"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "submit_small_order": {
+      "description": "Submit order within small size limit",
+      "tools": ["order:submit", "audit:log"],
+      "auto_approve": true,
+      "max_notional": 10000,
+      "rate_limit": 500
+    },
+    "submit_medium_order": {
+      "description": "Submit order within medium size limit",
+      "tools": ["order:submit", "audit:log"],
+      "auto_approve": true,
+      "max_notional": 100000,
+      "rate_limit": 100
+    },
+    "submit_large_order": {
+      "description": "Submit large order requiring approval",
+      "tools": ["order:submit", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Large order exceeds auto-execution limit"
+    },
+    "cancel_order": {
+      "description": "Cancel pending order",
+      "tools": ["order:cancel", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "modify_order": {
+      "description": "Modify pending order",
+      "tools": ["order:modify", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "close_position": {
+      "description": "Close existing position",
+      "tools": ["position:close", "order:submit", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 100
+    },
+    "emergency_liquidate": {
+      "description": "Emergency position liquidation",
+      "tools": ["position:close", "order:submit", "alert:send", "audit:log"],
+      "auto_approve": true,
+      "conditions": {"risk_breach": true}
+    },
+    "breach_alert": {
+      "description": "Alert on risk limit breach",
+      "tools": ["alert:send", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 100
+    },
+    "request_limit_increase": {
+      "description": "Request trading limit increase",
+      "tools": ["alert:send"],
+      "require_approval": true,
+      "escalation_reason": "Limit increase requires risk manager approval"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 5000,
+    "max_actions_per_day": 50000,
+    "require_human_approval": [],
+    "position_limits": {
+      "max_single_position": 500000,
+      "max_total_exposure": 2000000,
+      "max_sector_concentration": 0.25,
+      "max_single_name_concentration": 0.10
+    },
+    "order_limits": {
+      "max_order_size": 100000,
+      "max_orders_per_minute": 100,
+      "max_notional_per_hour": 1000000
+    },
+    "risk_limits": {
+      "max_daily_loss": 50000,
+      "max_var_95": 100000,
+      "max_drawdown": 0.05,
+      "stop_loss_trigger": 0.02
+    },
+    "escalate_when": {
+      "order_size_exceeds": 100000,
+      "daily_loss_exceeds": 25000,
+      "var_utilization_above": 0.80,
+      "unusual_market_conditions": true,
+      "after_hours_trading": true
+    },
+    "trading_hours": {
+      "equity": {"start": "09:30", "end": "16:00", "timezone": "America/New_York"},
+      "futures": {"start": "18:00", "end": "17:00", "timezone": "America/Chicago"},
+      "crypto": {"24x7": true}
+    },
+    "circuit_breakers": {
+      "halt_on_loss": 50000,
+      "halt_on_error_rate": 0.05,
+      "halt_on_latency_spike": 1000
+    }
+  },
+  "connectors": {
+    "exchange_primary": {
+      "type": "fix",
+      "config_ref": "connectors/exchange_fix.json"
+    },
+    "exchange_backup": {
+      "type": "http",
+      "config_ref": "connectors/exchange_rest.json"
+    },
+    "market_data": {
+      "type": "websocket",
+      "config_ref": "connectors/marketdata_ws.json"
+    },
+    "risk_system": {
+      "type": "http",
+      "config_ref": "connectors/risk_api.json"
+    },
+    "alerting": {
+      "type": "http",
+      "config_ref": "connectors/pagerduty_api.json"
+    }
+  },
+  "workflows": {
+    "standard_execution": {
+      "steps": [
+        {"action": "get_market_data", "auto": true},
+        {"action": "validate_signal", "auto": true},
+        {"action": "submit_small_order", "if": "notional <= 10000"},
+        {"action": "submit_medium_order", "if": "notional <= 100000"},
+        {"action": "submit_large_order", "if": "notional > 100000"}
+      ]
+    },
+    "risk_breach_response": {
+      "steps": [
+        {"action": "breach_alert", "auto": true},
+        {"action": "cancel_order", "auto": true, "scope": "all_pending"},
+        {"action": "emergency_liquidate", "if": "severe_breach"}
+      ]
+    }
+  },
+  "monitoring": {
+    "real_time_metrics": [
+      "pnl", "position_value", "var", "order_count", "fill_rate", "latency"
+    ],
+    "alert_thresholds": {
+      "pnl_warning": -25000,
+      "pnl_critical": -40000,
+      "var_warning": 80000,
+      "latency_warning": 500
+    }
+  },
+  "metadata": {
+    "contact": "trading-ops@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/trading",
+    "compliance_notes": "Must comply with SEC Rule 15c3-5, MiFID II algo requirements",
+    "estimated_roi": "Enables 24/7 trading with consistent risk management"
+  }
+}

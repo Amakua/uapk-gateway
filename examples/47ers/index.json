@@ -1,0 +1,132 @@
+{
+  "library": {
+    "name": "47ers Library",
+    "version": "1.0.0",
+    "description": "Pre-built micro-business agent templates for common governance patterns"
+  },
+  "templates": [
+    {
+      "id": "47er-ip-enforcement-settlement",
+      "name": "IP Enforcement Settlement Gate",
+      "category": "legal",
+      "path": "legal/ip_enforcement_settlement_gate.json",
+      "description": "Automates IP infringement detection and settlement negotiations",
+      "use_cases": [
+        "Trademark monitoring",
+        "Copyright enforcement",
+        "Settlement automation"
+      ],
+      "complexity": "medium",
+      "estimated_setup": "2-4 hours"
+    },
+    {
+      "id": "47er-takedown-notice",
+      "name": "DMCA Takedown Notice Gate",
+      "category": "legal",
+      "path": "legal/takedown_notice_gate.json",
+      "description": "Automates DMCA takedown notice generation and submission",
+      "use_cases": [
+        "Content protection",
+        "Platform takedowns",
+        "Compliance tracking"
+      ],
+      "complexity": "low",
+      "estimated_setup": "1-2 hours"
+    },
+    {
+      "id": "47er-kyc-onboarding",
+      "name": "KYC Onboarding Gate",
+      "category": "compliance",
+      "path": "compliance/kyc_onboarding_gate.json",
+      "description": "Automates Know Your Customer verification with risk-based routing",
+      "use_cases": [
+        "Customer onboarding",
+        "Identity verification",
+        "AML screening"
+      ],
+      "complexity": "high",
+      "estimated_setup": "4-8 hours"
+    },
+    {
+      "id": "47er-vendor-due-diligence",
+      "name": "Vendor Due Diligence Gate",
+      "category": "compliance",
+      "path": "compliance/vendor_due_diligence_gate.json",
+      "description": "Automates third-party vendor risk assessment",
+      "use_cases": [
+        "Vendor onboarding",
+        "Risk assessment",
+        "Ongoing monitoring"
+      ],
+      "complexity": "medium",
+      "estimated_setup": "2-4 hours"
+    },
+    {
+      "id": "47er-trading-execution",
+      "name": "Trading Execution Gate",
+      "category": "finance",
+      "path": "finance/trading_execution_gate.json",
+      "description": "Governs algorithmic trading with position limits and risk checks",
+      "use_cases": [
+        "Algo trading",
+        "Risk management",
+        "Order execution"
+      ],
+      "complexity": "high",
+      "estimated_setup": "8-16 hours"
+    },
+    {
+      "id": "47er-outbound-email-guard",
+      "name": "Outbound Email Guard",
+      "category": "general",
+      "path": "general/outbound_email_guard.json",
+      "description": "Governs AI-generated outbound emails with content review",
+      "use_cases": [
+        "Email governance",
+        "Content compliance",
+        "Rate limiting"
+      ],
+      "complexity": "low",
+      "estimated_setup": "1-2 hours"
+    }
+  ],
+  "categories": {
+    "legal": {
+      "name": "Legal & IP",
+      "description": "Templates for legal automation and IP protection",
+      "icon": "gavel"
+    },
+    "compliance": {
+      "name": "Compliance & Risk",
+      "description": "Templates for regulatory compliance and risk management",
+      "icon": "shield-check"
+    },
+    "finance": {
+      "name": "Finance & Trading",
+      "description": "Templates for financial operations and trading",
+      "icon": "chart-line"
+    },
+    "general": {
+      "name": "General Purpose",
+      "description": "Templates for common business operations",
+      "icon": "cog"
+    }
+  },
+  "connectors": [
+    {
+      "id": "email-smtp",
+      "name": "Email SMTP",
+      "path": "connectors/email_smtp.json"
+    },
+    {
+      "id": "crm-api",
+      "name": "CRM API",
+      "path": "connectors/crm_api.json"
+    },
+    {
+      "id": "stripe-api",
+      "name": "Stripe Payment",
+      "path": "connectors/stripe_api.json"
+    }
+  ]
+}

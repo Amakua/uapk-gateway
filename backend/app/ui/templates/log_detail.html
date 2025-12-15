@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/ui/logs" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+        &larr; Back to Logs
+    </a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+    <div>
+        <h1 style="margin-bottom: 0.5rem;">Interaction Record</h1>
+        <span style="font-family: monospace; color: var(--text-muted);">{{ record.record_id }}</span>
+    </div>
+    <span class="status-badge status-{{ record.decision.value }}" style="font-size: 1rem; padding: 0.5rem 1rem;">
+        {{ record.decision.value }}
+    </span>
+</div>
+
+<style>
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-denied { background: #fee2e2; color: #991b1b; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-timeout { background: #f1f5f9; color: #64748b; }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .detail-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+    .detail-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+    .detail-value {
+        font-size: 1rem;
+        word-break: break-all;
+    }
+    .detail-value.mono {
+        font-family: monospace;
+        font-size: 0.875rem;
+    }
+    .hash-field {
+        font-family: monospace;
+        font-size: 0.75rem;
+        background: #f1f5f9;
+        padding: 0.5rem;
+        border-radius: 4px;
+        word-break: break-all;
+        margin-top: 0.5rem;
+    }
+    .json-viewer {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .chain-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .chain-arrow {
+        color: var(--text-muted);
+    }
+    .signature-valid { color: var(--success); }
+    .signature-invalid { color: var(--danger); }
+    .collapsible {
+        cursor: pointer;
+    }
+    .collapsible:hover {
+        background: #f8fafc;
+    }
+    .collapse-content {
+        display: none;
+        padding-top: 1rem;
+    }
+    .collapse-content.show {
+        display: block;
+    }
+</style>
+
+{% if error %}
+<div class="card" style="background: #fee2e2; border-color: var(--danger);">
+    <p style="color: var(--danger);">{{ error }}</p>
+</div>
+{% endif %}
+
+<!-- Overview -->
+<div class="detail-grid">
+    <div class="detail-card">
+        <div class="detail-label">Action</div>
+        <div class="detail-value" style="font-weight: 600;">{{ record.action_type }}: {{ record.tool }}</div>
+    </div>
+    <div class="detail-card">
+        <div class="detail-label">Timestamp</div>
+        <div class="detail-value">{{ record.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+    </div>
+    <div class="detail-card">
+        <div class="detail-label">Agent ID</div>
+        <div class="detail-value mono">{{ record.agent_id }}</div>
+    </div>
+    <div class="detail-card">
+        <div class="detail-label">UAPK ID</div>
+        <div class="detail-value mono">{{ record.uapk_id }}</div>
+    </div>
+    <div class="detail-card">
+        <div class="detail-label">Duration</div>
+        <div class="detail-value">{{ record.duration_ms or 'N/A' }}{% if record.duration_ms %} ms{% endif %}</div>
+    </div>
+    <div class="detail-card">
+        <div class="detail-label">Decision Reason</div>
+        <div class="detail-value">{{ record.decision_reason or 'N/A' }}</div>
+    </div>
+</div>
+
+<!-- Hash Chain Info -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title">
+        Hash Chain
+        <span class="signature-valid">&#10003; Signed</span>
+    </div>
+
+    <div style="display: grid; gap: 1rem;">
+        <div>
+            <div class="detail-label">Record Hash (SHA-256)</div>
+            <div class="hash-field">{{ record.record_hash }}</div>
+        </div>
+
+        <div>
+            <div class="detail-label">Previous Record Hash</div>
+            <div class="hash-field">{{ record.previous_record_hash or '(First record in chain)' }}</div>
+        </div>
+
+        <div>
+            <div class="detail-label">Request Hash</div>
+            <div class="hash-field">{{ record.request_hash }}</div>
+        </div>
+
+        {% if record.result_hash %}
+        <div>
+            <div class="detail-label">Result Hash</div>
+            <div class="hash-field">{{ record.result_hash }}</div>
+        </div>
+        {% endif %}
+
+        <div>
+            <div class="detail-label">Gateway Signature (Ed25519, Base64)</div>
+            <div class="hash-field">{{ record.gateway_signature }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Details -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title collapsible" onclick="toggleSection('request')">
+        Request Details
+        <span style="color: var(--text-muted);">&#9662;</span>
+    </div>
+    <div id="request" class="collapse-content show">
+        <div class="json-viewer">{{ request_json }}</div>
+    </div>
+</div>
+
+<!-- Policy Trace -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title collapsible" onclick="toggleSection('trace')">
+        Policy Trace
+        <span style="color: var(--text-muted);">&#9662;</span>
+    </div>
+    <div id="trace" class="collapse-content show">
+        <div class="json-viewer">{{ policy_trace_json }}</div>
+    </div>
+</div>
+
+<!-- Reasons -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title collapsible" onclick="toggleSection('reasons')">
+        Decision Reasons
+        <span style="color: var(--text-muted);">&#9662;</span>
+    </div>
+    <div id="reasons" class="collapse-content show">
+        <div class="json-viewer">{{ reasons_json }}</div>
+    </div>
+</div>
+
+<!-- Risk Snapshot -->
+{% if record.risk_snapshot_json %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title collapsible" onclick="toggleSection('risk')">
+        Risk Snapshot
+        <span style="color: var(--text-muted);">&#9662;</span>
+    </div>
+    <div id="risk" class="collapse-content">
+        <div class="json-viewer">{{ risk_snapshot_json }}</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Result -->
+{% if record.result %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="section-title collapsible" onclick="toggleSection('result')">
+        Execution Result
+        <span style="color: var(--text-muted);">&#9662;</span>
+    </div>
+    <div id="result" class="collapse-content show">
+        <div class="json-viewer">{{ result_json }}</div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function toggleSection(id) {
+    const content = document.getElementById(id);
+    content.classList.toggle('show');
+}
+</script>
+{% endblock %}

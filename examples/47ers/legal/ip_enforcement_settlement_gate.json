@@ -1,0 +1,140 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-ip-enforcement-settlement",
+    "name": "IP Enforcement Settlement Gate",
+    "category": "legal",
+    "description": "Automates IP infringement detection and settlement negotiations with human approval for legal actions"
+  },
+  "agent": {
+    "id": "ip-enforcement-agent",
+    "name": "IP Enforcement Agent",
+    "version": "1.0.0",
+    "description": "Monitors for IP infringement, sends cease-and-desist notices, and manages settlement negotiations",
+    "organization": "{{ORG_SLUG}}",
+    "team": "legal"
+  },
+  "roles": [
+    {
+      "id": "ip-monitor",
+      "name": "IP Monitor",
+      "description": "Scans marketplaces and websites for potential infringement"
+    },
+    {
+      "id": "settlement-negotiator",
+      "name": "Settlement Negotiator",
+      "description": "Handles settlement communications and negotiations"
+    },
+    {
+      "id": "legal-escalation",
+      "name": "Legal Escalation",
+      "description": "Escalates to human legal counsel for formal action"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "search:marketplace",
+      "search:web",
+      "email:send",
+      "email:read",
+      "document:generate",
+      "document:sign",
+      "crm:read",
+      "crm:update",
+      "payment:receive",
+      "legal:file-complaint"
+    ]
+  },
+  "action_types": {
+    "infringement_detection": {
+      "description": "Detect potential IP infringement",
+      "tools": ["search:marketplace", "search:web"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "cease_desist": {
+      "description": "Send cease and desist notice",
+      "tools": ["email:send", "document:generate"],
+      "auto_approve": true,
+      "rate_limit": 50
+    },
+    "settlement_offer": {
+      "description": "Send settlement offer",
+      "tools": ["email:send", "document:generate", "payment:receive"],
+      "auto_approve": true,
+      "max_amount": 500,
+      "rate_limit": 20
+    },
+    "settlement_negotiation": {
+      "description": "Negotiate settlement terms",
+      "tools": ["email:send", "email:read", "crm:update"],
+      "auto_approve": true,
+      "rate_limit": 100
+    },
+    "formal_legal_action": {
+      "description": "File formal legal complaint",
+      "tools": ["legal:file-complaint", "document:sign"],
+      "require_approval": true,
+      "escalation_reason": "Legal action requires attorney review"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 200,
+    "max_actions_per_day": 1000,
+    "max_settlement_amount": 5000,
+    "require_human_approval": [
+      "legal:file-complaint",
+      "document:sign"
+    ],
+    "escalate_when": {
+      "settlement_amount_exceeds": 1000,
+      "infringer_is_enterprise": true,
+      "multiple_violations": 3
+    },
+    "allowed_hours": {
+      "start": "06:00",
+      "end": "22:00",
+      "timezone": "America/New_York"
+    }
+  },
+  "connectors": {
+    "marketplace_search": {
+      "type": "http",
+      "config_ref": "connectors/marketplace_aggregator.json"
+    },
+    "email": {
+      "type": "smtp",
+      "config_ref": "connectors/email_smtp.json"
+    },
+    "document_gen": {
+      "type": "http",
+      "config_ref": "connectors/docgen_api.json"
+    },
+    "payment": {
+      "type": "http",
+      "config_ref": "connectors/stripe_api.json"
+    },
+    "crm": {
+      "type": "http",
+      "config_ref": "connectors/crm_api.json"
+    }
+  },
+  "workflows": {
+    "standard_enforcement": {
+      "steps": [
+        {"action": "infringement_detection", "auto": true},
+        {"action": "cease_desist", "auto": true, "wait_days": 7},
+        {"action": "settlement_offer", "auto": true, "wait_days": 14},
+        {"action": "settlement_negotiation", "auto": true, "max_rounds": 3},
+        {"action": "formal_legal_action", "require_approval": true}
+      ]
+    }
+  },
+  "metadata": {
+    "contact": "legal@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/ip-enforcement",
+    "compliance_notes": "Ensure jurisdiction-specific legal requirements are met",
+    "estimated_roi": "Automates 80% of routine IP enforcement, reducing legal costs"
+  }
+}

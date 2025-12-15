@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uapk.dev/schemas/interaction-record.v1.json",
+  "title": "UAPK Interaction Record",
+  "description": "JSON schema for UAPK Interaction Record v1 - tamper-evident audit log entry",
+  "type": "object",
+  "required": ["record_id", "timestamp", "agent_id", "action", "request", "decision", "signature"],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "pattern": "^ir-[a-zA-Z0-9]{16,32}$",
+      "description": "Unique record identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record creation timestamp"
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Agent that made the request"
+    },
+    "organization_id": {
+      "type": "string",
+      "description": "Organization context"
+    },
+    "capability_token_id": {
+      "type": "string",
+      "description": "Capability token used"
+    },
+    "action": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$",
+      "description": "Action that was requested"
+    },
+    "request": {
+      "type": "object",
+      "description": "Original action request",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "description": "Action parameters"
+        },
+        "context": {
+          "type": "object",
+          "description": "Request context",
+          "properties": {
+            "conversation_id": { "type": "string" },
+            "reason": { "type": "string" },
+            "metadata": { "type": "object" }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["approved", "denied", "pending", "timeout"],
+      "description": "Policy decision"
+    },
+    "decision_reason": {
+      "type": "string",
+      "description": "Explanation for decision"
+    },
+    "policy_evaluations": {
+      "type": "array",
+      "description": "Results of policy evaluations",
+      "items": {
+        "type": "object",
+        "required": ["policy_id", "result"],
+        "properties": {
+          "policy_id": { "type": "string" },
+          "policy_name": { "type": "string" },
+          "result": {
+            "type": "string",
+            "enum": ["pass", "fail", "skip"]
+          },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "description": "Action execution result (if approved)",
+      "properties": {
+        "success": { "type": "boolean" },
+        "data": { "type": "object" },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total processing time in milliseconds"
+    },
+    "signature": {
+      "type": "string",
+      "description": "HMAC signature of record contents"
+    },
+    "previous_hash": {
+      "type": "string",
+      "description": "Hash of previous record for chain integrity"
+    }
+  }
+}

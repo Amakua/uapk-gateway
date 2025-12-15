@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Approvals</h1>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/ui/approvals" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+        <a href="/ui/approvals?status_filter=pending" class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">Pending ({{ stats.pending if stats else 0 }})</a>
+        <a href="/ui/approvals?status_filter=approved" class="filter-btn {% if status_filter == 'approved' %}active{% endif %}">Approved</a>
+        <a href="/ui/approvals?status_filter=denied" class="filter-btn {% if status_filter == 'denied' %}active{% endif %}">Denied</a>
+        <a href="/ui/approvals?status_filter=expired" class="filter-btn {% if status_filter == 'expired' %}active{% endif %}">Expired</a>
+    </div>
+</div>
+
+<style>
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .filter-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    .approval-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.2s;
+    }
+    .approval-card:hover {
+        border-color: var(--primary);
+    }
+    .approval-info {
+        flex: 1;
+    }
+    .approval-id {
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    .approval-action {
+        font-weight: 600;
+        margin: 0.25rem 0;
+    }
+    .approval-meta {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-denied { background: #fee2e2; color: #991b1b; }
+    .status-expired { background: #f1f5f9; color: #64748b; }
+    .view-btn {
+        padding: 0.5rem 1rem;
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .view-btn:hover {
+        background: var(--primary-dark);
+    }
+</style>
+
+{% if error %}
+<div class="card" style="background: #fee2e2; border-color: var(--danger);">
+    <p style="color: var(--danger);">{{ error }}</p>
+</div>
+{% endif %}
+
+{% if stats %}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">{{ stats.pending }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Pending</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--success);">{{ stats.approved }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Approved</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">{{ stats.denied }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Denied</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--text-muted);">{{ stats.expired }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Expired</div>
+    </div>
+</div>
+{% endif %}
+
+{% if approvals %}
+<div class="approvals-list">
+    {% for approval in approvals %}
+    <div class="approval-card">
+        <div class="approval-info">
+            <div class="approval-id">{{ approval.approval_id }}</div>
+            <div class="approval-action">
+                {{ approval.action.type }}: {{ approval.action.tool }}
+            </div>
+            <div class="approval-meta">
+                Agent: {{ approval.agent_id }} | UAPK: {{ approval.uapk_id }}
+                | {{ approval.created_at.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="status-badge status-{{ approval.status.value }}">{{ approval.status.value }}</span>
+            <a href="/ui/approvals/{{ approval.approval_id }}" class="view-btn">View</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="placeholder">
+        <p>No approvals found.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+            Approval tasks are created when agent actions require human review.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

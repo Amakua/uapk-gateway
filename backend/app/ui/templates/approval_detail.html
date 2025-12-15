@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    .back-link:hover {
+        color: var(--primary);
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .detail-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    .detail-value {
+        font-weight: 500;
+    }
+    .json-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    .reason-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: #fef3c7;
+        color: #92400e;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .btn-approve {
+        background: var(--success);
+        color: white;
+    }
+    .btn-approve:hover {
+        background: #16a34a;
+    }
+    .btn-deny {
+        background: var(--danger);
+        color: white;
+    }
+    .btn-deny:hover {
+        background: #dc2626;
+    }
+    .btn-secondary {
+        background: var(--border);
+        color: var(--text);
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .form-group input, .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal.active {
+        display: flex;
+    }
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+    }
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-denied { background: #fee2e2; color: #991b1b; }
+    .status-expired { background: #f1f5f9; color: #64748b; }
+    .error-banner {
+        background: #fee2e2;
+        border: 1px solid var(--danger);
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        color: var(--danger);
+    }
+</style>
+
+<a href="/ui/approvals" class="back-link">
+    &larr; Back to Approvals
+</a>
+
+<h1 style="display: flex; align-items: center; gap: 1rem;">
+    Approval Request
+    <span class="status-badge status-{{ approval.status.value }}">{{ approval.status.value }}</span>
+</h1>
+
+{% if error %}
+<div class="error-banner">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Request Details</h3>
+    <div class="detail-grid">
+        <div class="detail-label">Approval ID</div>
+        <div class="detail-value" style="font-family: monospace;">{{ approval.approval_id }}</div>
+
+        <div class="detail-label">Interaction ID</div>
+        <div class="detail-value" style="font-family: monospace;">{{ approval.interaction_id }}</div>
+
+        <div class="detail-label">Agent ID</div>
+        <div class="detail-value">{{ approval.agent_id }}</div>
+
+        <div class="detail-label">UAPK ID</div>
+        <div class="detail-value">{{ approval.uapk_id }}</div>
+
+        <div class="detail-label">Created</div>
+        <div class="detail-value">{{ approval.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+
+        {% if approval.expires_at %}
+        <div class="detail-label">Expires</div>
+        <div class="detail-value">{{ approval.expires_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+        {% endif %}
+
+        <div class="detail-label">Escalation Reasons</div>
+        <div class="detail-value">
+            {% for code in approval.reason_codes %}
+            <span class="reason-tag">{{ code }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Action</h3>
+    <div class="detail-grid">
+        <div class="detail-label">Type</div>
+        <div class="detail-value">{{ approval.action.type }}</div>
+
+        <div class="detail-label">Tool</div>
+        <div class="detail-value">{{ approval.action.tool }}</div>
+    </div>
+
+    <h4 style="margin: 1rem 0 0.5rem; font-size: 0.875rem; color: var(--text-muted);">Parameters</h4>
+    <div class="json-block">{{ approval.action.params | tojson(indent=2) }}</div>
+</div>
+
+{% if approval.counterparty %}
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Counterparty</h3>
+    <div class="json-block">{{ approval.counterparty | tojson(indent=2) }}</div>
+</div>
+{% endif %}
+
+{% if approval.context %}
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Context</h3>
+    <div class="json-block">{{ approval.context | tojson(indent=2) }}</div>
+</div>
+{% endif %}
+
+{% if approval.status.value == 'pending' %}
+<div class="card" style="background: #fefce8;">
+    <h3 style="margin-bottom: 1rem;">Take Action</h3>
+    <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        Review the request details above and decide whether to approve or deny this action.
+    </p>
+    <div class="action-buttons">
+        <button class="btn btn-approve" onclick="showModal('approve-modal')">Approve</button>
+        <button class="btn btn-deny" onclick="showModal('deny-modal')">Deny</button>
+    </div>
+</div>
+{% endif %}
+
+{% if approval.decided_at %}
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">Decision</h3>
+    <div class="detail-grid">
+        <div class="detail-label">Decided</div>
+        <div class="detail-value">{{ approval.decided_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+
+        <div class="detail-label">Decided By</div>
+        <div class="detail-value">{{ approval.decided_by }}</div>
+
+        {% if approval.decision_notes %}
+        <div class="detail-label">Notes</div>
+        <div class="detail-value">{{ approval.decision_notes }}</div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Approve Modal -->
+<div id="approve-modal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title" style="color: var(--success);">Approve Action</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted);">
+            This will generate a short-lived override token that allows the agent to execute this action.
+        </p>
+        <form action="/ui/approvals/{{ approval.approval_id }}/approve" method="POST">
+            <div class="form-group">
+                <label for="notes">Notes (optional)</label>
+                <textarea name="notes" id="notes" placeholder="Add any notes about this approval..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('approve-modal')">Cancel</button>
+                <button type="submit" class="btn btn-approve">Approve</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Deny Modal -->
+<div id="deny-modal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title" style="color: var(--danger);">Deny Action</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted);">
+            The agent will not be able to execute this action.
+        </p>
+        <form action="/ui/approvals/{{ approval.approval_id }}/deny" method="POST">
+            <div class="form-group">
+                <label for="reason">Reason (optional)</label>
+                <input type="text" name="reason" id="reason" placeholder="e.g., Amount too high, Suspicious activity">
+            </div>
+            <div class="form-group">
+                <label for="deny-notes">Notes (optional)</label>
+                <textarea name="notes" id="deny-notes" placeholder="Add any additional notes..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('deny-modal')">Cancel</button>
+                <button type="submit" class="btn btn-deny">Deny</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+function hideModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+// Close modal on click outside
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+});
+</script>
+{% endblock %}

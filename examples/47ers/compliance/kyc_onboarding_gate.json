@@ -1,0 +1,202 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-kyc-onboarding",
+    "name": "KYC Onboarding Gate",
+    "category": "compliance",
+    "description": "Automates Know Your Customer verification with tiered approval based on risk level"
+  },
+  "agent": {
+    "id": "kyc-onboarding-agent",
+    "name": "KYC Onboarding Agent",
+    "version": "1.0.0",
+    "description": "Handles customer identity verification, document validation, and risk assessment",
+    "organization": "{{ORG_SLUG}}",
+    "team": "compliance"
+  },
+  "roles": [
+    {
+      "id": "document-collector",
+      "name": "Document Collector",
+      "description": "Collects and validates identity documents"
+    },
+    {
+      "id": "identity-verifier",
+      "name": "Identity Verifier",
+      "description": "Verifies identity against authoritative sources"
+    },
+    {
+      "id": "risk-assessor",
+      "name": "Risk Assessor",
+      "description": "Assesses customer risk level for AML/CFT"
+    },
+    {
+      "id": "approval-router",
+      "name": "Approval Router",
+      "description": "Routes high-risk cases for human review"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "document:upload",
+      "document:ocr",
+      "document:verify",
+      "identity:verify",
+      "identity:check-watchlist",
+      "identity:check-pep",
+      "identity:check-sanctions",
+      "email:send",
+      "email:read",
+      "crm:read",
+      "crm:update",
+      "crm:create",
+      "account:create",
+      "account:restrict",
+      "report:generate"
+    ]
+  },
+  "action_types": {
+    "collect_documents": {
+      "description": "Request and collect identity documents",
+      "tools": ["email:send", "document:upload"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "validate_documents": {
+      "description": "OCR and validate document authenticity",
+      "tools": ["document:ocr", "document:verify"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "verify_identity": {
+      "description": "Verify identity against databases",
+      "tools": ["identity:verify"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "screening_checks": {
+      "description": "Run watchlist, PEP, and sanctions screening",
+      "tools": ["identity:check-watchlist", "identity:check-pep", "identity:check-sanctions"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "approve_low_risk": {
+      "description": "Auto-approve low-risk customers",
+      "tools": ["crm:update", "account:create", "email:send"],
+      "auto_approve": true,
+      "conditions": {"risk_score": "<=30"}
+    },
+    "approve_medium_risk": {
+      "description": "Approve medium-risk with enhanced monitoring",
+      "tools": ["crm:update", "account:create", "email:send"],
+      "auto_approve": true,
+      "conditions": {"risk_score": "31-70"}
+    },
+    "escalate_high_risk": {
+      "description": "Escalate high-risk for manual review",
+      "tools": ["crm:update", "email:send"],
+      "require_approval": true,
+      "escalation_reason": "High-risk customer requires compliance officer review"
+    },
+    "reject_prohibited": {
+      "description": "Reject prohibited customers",
+      "tools": ["crm:update", "email:send", "account:restrict"],
+      "require_approval": true,
+      "escalation_reason": "Sanctioned or prohibited entity detected"
+    },
+    "generate_sar": {
+      "description": "Generate Suspicious Activity Report",
+      "tools": ["report:generate", "email:send"],
+      "require_approval": true,
+      "escalation_reason": "SAR filing requires compliance officer sign-off"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 200,
+    "max_actions_per_day": 2000,
+    "require_human_approval": [
+      "account:restrict",
+      "report:generate"
+    ],
+    "escalate_when": {
+      "risk_score_above": 70,
+      "pep_match": true,
+      "sanctions_match": true,
+      "watchlist_match": true,
+      "document_fraud_detected": true,
+      "high_risk_jurisdiction": true
+    },
+    "jurisdiction_rules": {
+      "prohibited": ["KP", "IR", "SY", "CU"],
+      "high_risk": ["AF", "MM", "VE", "YE", "LY"],
+      "enhanced_due_diligence": ["RU", "BY", "PK"]
+    }
+  },
+  "connectors": {
+    "identity_verification": {
+      "type": "http",
+      "config_ref": "connectors/jumio_api.json"
+    },
+    "watchlist_screening": {
+      "type": "http",
+      "config_ref": "connectors/worldcheck_api.json"
+    },
+    "document_verification": {
+      "type": "http",
+      "config_ref": "connectors/onfido_api.json"
+    },
+    "email": {
+      "type": "smtp",
+      "config_ref": "connectors/email_smtp.json"
+    },
+    "crm": {
+      "type": "http",
+      "config_ref": "connectors/crm_api.json"
+    }
+  },
+  "workflows": {
+    "standard_onboarding": {
+      "steps": [
+        {"action": "collect_documents", "auto": true},
+        {"action": "validate_documents", "auto": true},
+        {"action": "verify_identity", "auto": true},
+        {"action": "screening_checks", "auto": true},
+        {"action": "approve_low_risk", "if": "risk_score <= 30"},
+        {"action": "approve_medium_risk", "if": "risk_score 31-70"},
+        {"action": "escalate_high_risk", "if": "risk_score > 70"},
+        {"action": "reject_prohibited", "if": "sanctions_match"}
+      ]
+    },
+    "enhanced_due_diligence": {
+      "steps": [
+        {"action": "collect_documents", "enhanced": true},
+        {"action": "validate_documents", "auto": true},
+        {"action": "verify_identity", "auto": true},
+        {"action": "screening_checks", "auto": true},
+        {"action": "escalate_high_risk", "always": true}
+      ]
+    }
+  },
+  "risk_scoring": {
+    "factors": {
+      "jurisdiction": {"weight": 25, "high_risk_countries": "+20"},
+      "pep_status": {"weight": 20, "pep_match": "+30"},
+      "document_quality": {"weight": 15, "issues": "+10"},
+      "watchlist": {"weight": 20, "match": "+50"},
+      "transaction_profile": {"weight": 20}
+    },
+    "thresholds": {
+      "auto_approve": 30,
+      "enhanced_monitoring": 70,
+      "manual_review": 85,
+      "auto_reject": 95
+    }
+  },
+  "metadata": {
+    "contact": "compliance@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/kyc",
+    "compliance_notes": "Compliant with BSA/AML, FATF recommendations, EU 5AMLD",
+    "estimated_roi": "Reduces KYC processing time by 70%, improves accuracy"
+  }
+}

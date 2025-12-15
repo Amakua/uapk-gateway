@@ -1,0 +1,34 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "agent": {
+    "id": "deployment-bot",
+    "name": "Deployment Bot",
+    "version": "2.1.0",
+    "description": "AI agent that manages code deployments and infrastructure",
+    "organization": "org-acme",
+    "team": "team-engineering"
+  },
+  "capabilities": {
+    "requested": [
+      "github:read",
+      "github:create-pr",
+      "github:merge",
+      "kubernetes:read",
+      "kubernetes:deploy",
+      "slack:send"
+    ]
+  },
+  "constraints": {
+    "max_actions_per_hour": 50,
+    "require_human_approval": [
+      "kubernetes:deploy",
+      "github:merge"
+    ]
+  },
+  "metadata": {
+    "contact": "platform-team@acme.com",
+    "documentation": "https://docs.acme.com/agents/deployment-bot",
+    "source": "https://github.com/acme/deployment-bot"
+  }
+}

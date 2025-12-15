@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        nav a:hover, nav a.active {
+            color: var(--primary);
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 1.5rem;
+            padding-left: 1.5rem;
+            border-left: 1px solid var(--border);
+        }
+        .user-email {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        .logout-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .logout-btn:hover {
+            color: var(--danger);
+        }
+        main {
+            padding: 2rem 0;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .placeholder {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-ok { background: #dcfce7; color: #166534; }
+        .status-warning { background: #fef3c7; color: #92400e; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">UAPK Gateway</a>
+            <nav>
+                <a href="/" {% if request.url.path == "/" %}class="active"{% endif %}>Dashboard</a>
+                <a href="/agents" {% if request.url.path == "/agents" %}class="active"{% endif %}>Agents</a>
+                <a href="/policies" {% if request.url.path == "/policies" %}class="active"{% endif %}>Policies</a>
+                <a href="/ui/approvals" {% if "/approvals" in request.url.path %}class="active"{% endif %}>Approvals</a>
+                <a href="/ui/logs" {% if "/logs" in request.url.path %}class="active"{% endif %}>Logs</a>
+                <a href="/ui/api-keys" {% if request.url.path == "/ui/api-keys" %}class="active"{% endif %}>API Keys</a>
+                <a href="/ui/manifests" {% if request.url.path == "/ui/manifests" %}class="active"{% endif %}>Manifests</a>
+                <a href="/docs" target="_blank">API Docs</a>
+                {% if user %}
+                <div class="user-menu">
+                    <span class="user-email">{{ user.email }}</span>
+                    <a href="/ui/logout" class="logout-btn">Logout</a>
+                </div>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "connector_id": "crm-api",
+  "name": "CRM API Connector",
+  "type": "http",
+  "description": "Generic CRM API connector (Salesforce, HubSpot, etc.)",
+  "config": {
+    "base_url": "{{CRM_API_URL}}",
+    "auth_type": "oauth2",
+    "client_id": "{{CRM_CLIENT_ID}}",
+    "client_secret_ref": "crm_client_secret",
+    "token_url": "{{CRM_TOKEN_URL}}",
+    "scopes": ["read", "write"]
+  },
+  "capabilities": ["crm:read", "crm:update", "crm:create", "crm:delete"],
+  "endpoints": {
+    "read": {
+      "method": "GET",
+      "path": "/api/v1/records/{record_type}/{record_id}"
+    },
+    "create": {
+      "method": "POST",
+      "path": "/api/v1/records/{record_type}"
+    },
+    "update": {
+      "method": "PATCH",
+      "path": "/api/v1/records/{record_type}/{record_id}"
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/api/v1/records/{record_type}/{record_id}"
+    },
+    "search": {
+      "method": "POST",
+      "path": "/api/v1/search"
+    }
+  },
+  "rate_limits": {
+    "per_second": 5,
+    "per_minute": 100,
+    "per_day": 10000
+  },
+  "mock_mode": {
+    "enabled": "{{DEMO_MODE}}",
+    "responses": {
+      "read": {"id": "{{record_id}}", "name": "Demo Record", "status": "active"},
+      "create": {"id": "mock-{{UUID}}", "created": true},
+      "update": {"id": "{{record_id}}", "updated": true},
+      "delete": {"id": "{{record_id}}", "deleted": true}
+    }
+  }
+}

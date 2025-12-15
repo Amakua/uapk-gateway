@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Interaction Logs</h1>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/ui/logs" class="filter-btn {% if not decision_filter %}active{% endif %}">All</a>
+        <a href="/ui/logs?decision=approved" class="filter-btn {% if decision_filter == 'approved' %}active{% endif %}">Approved</a>
+        <a href="/ui/logs?decision=denied" class="filter-btn {% if decision_filter == 'denied' %}active{% endif %}">Denied</a>
+        <a href="/ui/logs?decision=pending" class="filter-btn {% if decision_filter == 'pending' %}active{% endif %}">Pending</a>
+    </div>
+</div>
+
+<style>
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .filter-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    .log-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.2s;
+    }
+    .log-card:hover {
+        border-color: var(--primary);
+    }
+    .log-info {
+        flex: 1;
+    }
+    .log-id {
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    .log-action {
+        font-weight: 600;
+        margin: 0.25rem 0;
+    }
+    .log-meta {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-denied { background: #fee2e2; color: #991b1b; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-timeout { background: #f1f5f9; color: #64748b; }
+    .view-btn {
+        padding: 0.5rem 1rem;
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .view-btn:hover {
+        background: var(--primary-dark);
+    }
+    .export-btn {
+        padding: 0.5rem 1rem;
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .export-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+    .hash-badge {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        background: #f1f5f9;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+    }
+    .chain-status {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+    }
+    .chain-ok { color: var(--success); }
+    .chain-error { color: var(--danger); }
+    .filters-form {
+        display: flex;
+        gap: 0.75rem;
+        align-items: end;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .filter-group label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .filter-group input, .filter-group select {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+    .verify-btn {
+        padding: 0.5rem 1rem;
+        background: #f1f5f9;
+        color: var(--text);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .verify-btn:hover {
+        background: #e2e8f0;
+    }
+</style>
+
+{% if error %}
+<div class="card" style="background: #fee2e2; border-color: var(--danger);">
+    <p style="color: var(--danger);">{{ error }}</p>
+</div>
+{% endif %}
+
+<!-- Filters -->
+<div class="card" style="margin-bottom: 1rem;">
+    <form method="GET" action="/ui/logs" class="filters-form">
+        <div class="filter-group">
+            <label>UAPK ID</label>
+            <input type="text" name="uapk_id" value="{{ uapk_id or '' }}" placeholder="Filter by UAPK...">
+        </div>
+        <div class="filter-group">
+            <label>Agent ID</label>
+            <input type="text" name="agent_id" value="{{ agent_id or '' }}" placeholder="Filter by agent...">
+        </div>
+        <div class="filter-group">
+            <label>Tool</label>
+            <input type="text" name="tool" value="{{ tool or '' }}" placeholder="Filter by tool...">
+        </div>
+        <div class="filter-group">
+            <label>From</label>
+            <input type="datetime-local" name="from" value="{{ start_time.strftime('%Y-%m-%dT%H:%M') if start_time else '' }}">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="datetime-local" name="to" value="{{ end_time.strftime('%Y-%m-%dT%H:%M') if end_time else '' }}">
+        </div>
+        <button type="submit" class="filter-btn active">Apply Filters</button>
+        <a href="/ui/logs" class="filter-btn">Clear</a>
+    </form>
+</div>
+
+<!-- Stats -->
+{% if stats %}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700;">{{ stats.total }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Total Records</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--success);">{{ stats.approved }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Approved</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">{{ stats.denied }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Denied</div>
+    </div>
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">{{ stats.pending }}</div>
+        <div style="color: var(--text-muted); font-size: 0.875rem;">Pending</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Export Actions -->
+{% if uapk_id %}
+<div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <strong>Export & Verify</strong>
+        <span style="color: var(--text-muted); font-size: 0.875rem; margin-left: 0.5rem;">
+            UAPK: {{ uapk_id }}
+        </span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/ui/logs/verify?uapk_id={{ uapk_id }}" class="verify-btn">Verify Chain</a>
+        <a href="/ui/logs/export?uapk_id={{ uapk_id }}&format=json" class="export-btn">Export JSON</a>
+        <a href="/ui/logs/export?uapk_id={{ uapk_id }}&format=jsonl" class="export-btn">Export JSONL</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Logs List -->
+{% if records %}
+<div class="logs-list">
+    {% for record in records %}
+    <div class="log-card">
+        <div class="log-info">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="log-id">{{ record.record_id }}</span>
+                <span class="hash-badge" title="{{ record.record_hash }}">{{ record.record_hash[:8] }}...</span>
+            </div>
+            <div class="log-action">
+                {{ record.action_type }}: {{ record.tool }}
+            </div>
+            <div class="log-meta">
+                Agent: {{ record.agent_id }} | UAPK: {{ record.uapk_id }}
+                | {{ record.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                {% if record.duration_ms %}
+                | {{ record.duration_ms }}ms
+                {% endif %}
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="status-badge status-{{ record.decision.value }}">{{ record.decision.value }}</span>
+            <a href="/ui/logs/{{ record.record_id }}" class="view-btn">View</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if has_more or offset > 0 %}
+<div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+    {% if offset > 0 %}
+    <a href="/ui/logs?offset={{ offset - limit }}{% if uapk_id %}&uapk_id={{ uapk_id }}{% endif %}{% if decision_filter %}&decision={{ decision_filter }}{% endif %}" class="filter-btn">Previous</a>
+    {% endif %}
+    {% if has_more %}
+    <a href="/ui/logs?offset={{ offset + limit }}{% if uapk_id %}&uapk_id={{ uapk_id }}{% endif %}{% if decision_filter %}&decision={{ decision_filter }}{% endif %}" class="filter-btn">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="placeholder">
+        <p>No interaction records found.</p>
+        <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+            All agent action requests and their outcomes are logged here with tamper-evident signatures.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top: 1.5rem; background: #f1f5f9;">
+    <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Hash Chain Audit</h3>
+    <p style="color: var(--text-muted); font-size: 0.875rem;">
+        Each interaction record is hash-chained to the previous record for its UAPK, creating a tamper-evident audit log.
+        Records are signed with the gateway's Ed25519 key. Use the Verify Chain button to check integrity.
+    </p>
+</div>
+{% endblock %}

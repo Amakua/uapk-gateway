@@ -1,0 +1,237 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-outbound-email-guard",
+    "name": "Outbound Email Guard",
+    "category": "general",
+    "description": "Governs AI-generated outbound emails with content review, rate limiting, and recipient validation"
+  },
+  "agent": {
+    "id": "email-guard-agent",
+    "name": "Outbound Email Guard Agent",
+    "version": "1.0.0",
+    "description": "Validates and governs all AI-generated outbound emails",
+    "organization": "{{ORG_SLUG}}",
+    "team": "communications"
+  },
+  "roles": [
+    {
+      "id": "content-validator",
+      "name": "Content Validator",
+      "description": "Validates email content for policy compliance"
+    },
+    {
+      "id": "recipient-checker",
+      "name": "Recipient Checker",
+      "description": "Validates recipients against allowlists and blocklists"
+    },
+    {
+      "id": "rate-limiter",
+      "name": "Rate Limiter",
+      "description": "Enforces sending rate limits"
+    },
+    {
+      "id": "escalation-handler",
+      "name": "Escalation Handler",
+      "description": "Routes sensitive emails for human review"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "email:send",
+      "email:send-bulk",
+      "email:validate-content",
+      "email:validate-recipient",
+      "email:check-reputation",
+      "contact:lookup",
+      "contact:verify",
+      "template:render",
+      "audit:log"
+    ]
+  },
+  "action_types": {
+    "validate_content": {
+      "description": "Validate email content against policies",
+      "tools": ["email:validate-content"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "validate_recipient": {
+      "description": "Validate recipient against rules",
+      "tools": ["email:validate-recipient", "contact:lookup"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "send_internal": {
+      "description": "Send email to internal recipients",
+      "tools": ["email:send", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 500,
+      "conditions": {"recipient_domain": "internal"}
+    },
+    "send_customer": {
+      "description": "Send email to existing customers",
+      "tools": ["email:send", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 200,
+      "conditions": {"recipient_type": "customer"}
+    },
+    "send_prospect": {
+      "description": "Send email to prospects/leads",
+      "tools": ["email:send", "audit:log"],
+      "auto_approve": true,
+      "rate_limit": 100,
+      "conditions": {"recipient_type": "prospect", "opted_in": true}
+    },
+    "send_cold_outreach": {
+      "description": "Send cold outreach email",
+      "tools": ["email:send", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Cold outreach requires marketing approval"
+    },
+    "send_bulk": {
+      "description": "Send bulk email campaign",
+      "tools": ["email:send-bulk", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Bulk email requires marketing manager approval"
+    },
+    "send_sensitive": {
+      "description": "Send email with sensitive content",
+      "tools": ["email:send", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Sensitive content requires compliance review"
+    },
+    "send_executive": {
+      "description": "Send email to executive contacts",
+      "tools": ["email:send", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Executive contact requires leadership approval"
+    },
+    "send_legal": {
+      "description": "Send email with legal implications",
+      "tools": ["email:send", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Legal content requires legal team approval"
+    },
+    "send_media": {
+      "description": "Send email to media contacts",
+      "tools": ["email:send", "audit:log"],
+      "require_approval": true,
+      "escalation_reason": "Media contact requires PR approval"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 500,
+    "max_actions_per_day": 2000,
+    "require_human_approval": [
+      "email:send-bulk"
+    ],
+    "rate_limits": {
+      "per_recipient": {"per_day": 3, "per_week": 5},
+      "per_domain": {"per_hour": 50, "per_day": 200},
+      "total": {"per_hour": 500, "per_day": 2000}
+    },
+    "content_rules": {
+      "max_length": 10000,
+      "require_unsubscribe": true,
+      "require_sender_identity": true,
+      "prohibited_words": ["guaranteed", "act now", "limited time"],
+      "require_compliance_footer": true
+    },
+    "recipient_rules": {
+      "blocklist_domains": ["competitor.com", "spam-trap.net"],
+      "require_verified": true,
+      "require_opted_in_for_marketing": true
+    },
+    "escalate_when": {
+      "recipient_is_executive": true,
+      "recipient_is_media": true,
+      "recipient_is_regulator": true,
+      "content_mentions_pricing": true,
+      "content_mentions_legal": true,
+      "content_mentions_competitor": true,
+      "attachment_present": true,
+      "bulk_count_exceeds": 50,
+      "new_recipient_domain": true
+    }
+  },
+  "connectors": {
+    "smtp": {
+      "type": "smtp",
+      "config_ref": "connectors/email_smtp.json"
+    },
+    "email_service": {
+      "type": "http",
+      "config_ref": "connectors/sendgrid_api.json"
+    },
+    "crm": {
+      "type": "http",
+      "config_ref": "connectors/crm_api.json"
+    },
+    "content_scanner": {
+      "type": "http",
+      "config_ref": "connectors/content_scanner_api.json"
+    }
+  },
+  "workflows": {
+    "standard_send": {
+      "steps": [
+        {"action": "validate_content", "auto": true},
+        {"action": "validate_recipient", "auto": true},
+        {"action": "send_internal", "if": "internal_recipient"},
+        {"action": "send_customer", "if": "existing_customer"},
+        {"action": "send_prospect", "if": "opted_in_prospect"},
+        {"action": "send_cold_outreach", "if": "cold_outreach"}
+      ]
+    },
+    "bulk_campaign": {
+      "steps": [
+        {"action": "validate_content", "auto": true},
+        {"action": "send_bulk", "require_approval": true}
+      ]
+    }
+  },
+  "content_policies": {
+    "tone": {
+      "professional": true,
+      "no_all_caps": true,
+      "no_excessive_punctuation": true
+    },
+    "required_elements": {
+      "sender_name": true,
+      "sender_title": true,
+      "company_name": true,
+      "unsubscribe_link": "marketing_only",
+      "physical_address": "marketing_only"
+    },
+    "prohibited_claims": [
+      "guaranteed results",
+      "risk-free",
+      "limited time offer",
+      "act immediately"
+    ]
+  },
+  "templates": {
+    "customer_support": {
+      "from": "support@{{ORG_DOMAIN}}",
+      "signature": "customer_support_sig.html"
+    },
+    "sales": {
+      "from": "sales@{{ORG_DOMAIN}}",
+      "signature": "sales_sig.html",
+      "require_approval_for_pricing": true
+    },
+    "marketing": {
+      "from": "marketing@{{ORG_DOMAIN}}",
+      "signature": "marketing_sig.html",
+      "require_unsubscribe": true
+    }
+  },
+  "metadata": {
+    "contact": "communications@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/email-guard",
+    "compliance_notes": "Enforces CAN-SPAM, GDPR, and CASL requirements",
+    "estimated_roi": "Reduces email compliance violations by 95%"
+  }
+}

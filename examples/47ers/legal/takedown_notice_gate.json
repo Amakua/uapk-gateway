@@ -1,0 +1,155 @@
+{
+  "$schema": "https://uapk.dev/schemas/manifest.v1.json",
+  "version": "1.0",
+  "template": {
+    "id": "47er-takedown-notice",
+    "name": "DMCA Takedown Notice Gate",
+    "category": "legal",
+    "description": "Automates DMCA takedown notice generation and submission with compliance tracking"
+  },
+  "agent": {
+    "id": "takedown-agent",
+    "name": "DMCA Takedown Agent",
+    "version": "1.0.0",
+    "description": "Detects copyright infringement, generates DMCA notices, and tracks compliance",
+    "organization": "{{ORG_SLUG}}",
+    "team": "legal"
+  },
+  "roles": [
+    {
+      "id": "content-scanner",
+      "name": "Content Scanner",
+      "description": "Scans platforms for unauthorized content use"
+    },
+    {
+      "id": "notice-generator",
+      "name": "Notice Generator",
+      "description": "Generates compliant DMCA takedown notices"
+    },
+    {
+      "id": "compliance-tracker",
+      "name": "Compliance Tracker",
+      "description": "Tracks takedown compliance and follow-up"
+    }
+  ],
+  "capabilities": {
+    "requested": [
+      "search:web",
+      "search:social",
+      "search:video",
+      "content:fingerprint",
+      "email:send",
+      "email:read",
+      "document:generate",
+      "platform:submit-takedown",
+      "crm:read",
+      "crm:update",
+      "legal:counter-notice"
+    ]
+  },
+  "action_types": {
+    "content_scan": {
+      "description": "Scan for unauthorized content",
+      "tools": ["search:web", "search:social", "search:video", "content:fingerprint"],
+      "auto_approve": true,
+      "rate_limit": 5000
+    },
+    "generate_notice": {
+      "description": "Generate DMCA takedown notice",
+      "tools": ["document:generate"],
+      "auto_approve": true,
+      "rate_limit": 500
+    },
+    "submit_takedown": {
+      "description": "Submit takedown to platform",
+      "tools": ["platform:submit-takedown", "email:send"],
+      "auto_approve": true,
+      "rate_limit": 200
+    },
+    "track_compliance": {
+      "description": "Track takedown compliance",
+      "tools": ["search:web", "crm:update"],
+      "auto_approve": true,
+      "rate_limit": 1000
+    },
+    "counter_notice_response": {
+      "description": "Respond to counter-notice",
+      "tools": ["legal:counter-notice", "email:send", "document:generate"],
+      "require_approval": true,
+      "escalation_reason": "Counter-notice requires legal review"
+    },
+    "escalate_to_litigation": {
+      "description": "Escalate to formal litigation",
+      "tools": ["email:send", "document:generate"],
+      "require_approval": true,
+      "escalation_reason": "Litigation decision requires attorney"
+    }
+  },
+  "constraints": {
+    "max_actions_per_hour": 500,
+    "max_actions_per_day": 5000,
+    "require_human_approval": [
+      "legal:counter-notice"
+    ],
+    "escalate_when": {
+      "counter_notice_received": true,
+      "repeat_infringer": true,
+      "high_value_content": true
+    },
+    "platform_rate_limits": {
+      "youtube": {"per_day": 50},
+      "twitter": {"per_day": 100},
+      "facebook": {"per_day": 100},
+      "instagram": {"per_day": 50}
+    }
+  },
+  "connectors": {
+    "content_id": {
+      "type": "http",
+      "config_ref": "connectors/content_id_api.json"
+    },
+    "youtube": {
+      "type": "oauth2",
+      "config_ref": "connectors/youtube_api.json"
+    },
+    "twitter": {
+      "type": "oauth2",
+      "config_ref": "connectors/twitter_api.json"
+    },
+    "email": {
+      "type": "smtp",
+      "config_ref": "connectors/email_smtp.json"
+    },
+    "crm": {
+      "type": "http",
+      "config_ref": "connectors/crm_api.json"
+    }
+  },
+  "workflows": {
+    "standard_takedown": {
+      "steps": [
+        {"action": "content_scan", "auto": true},
+        {"action": "generate_notice", "auto": true},
+        {"action": "submit_takedown", "auto": true},
+        {"action": "track_compliance", "auto": true, "check_after_days": 3},
+        {"action": "escalate_to_litigation", "if": "non_compliant", "require_approval": true}
+      ]
+    }
+  },
+  "templates": {
+    "dmca_notice": {
+      "subject": "DMCA Takedown Notice - {{CONTENT_TITLE}}",
+      "body_template": "dmca_notice_template.md"
+    },
+    "follow_up": {
+      "subject": "Follow-up: DMCA Takedown Notice - {{CONTENT_TITLE}}",
+      "body_template": "dmca_followup_template.md"
+    }
+  },
+  "metadata": {
+    "contact": "dmca@{{ORG_DOMAIN}}",
+    "documentation": "https://docs.{{ORG_DOMAIN}}/agents/takedown",
+    "compliance_notes": "Must include valid DMCA agent registration",
+    "estimated_roi": "Reduces takedown processing time from days to minutes"
+  }
+}

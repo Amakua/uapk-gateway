@@ -1,0 +1,557 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uapk.dev/schemas/uapk-manifest.v0.1.json",
+  "title": "UAPK Manifest v0.1",
+  "description": "Universal Agent Protocol Kit Manifest - defines agent identity, capabilities, policies, and budgets",
+  "type": "object",
+  "required": ["schema_version", "uapk_id", "name", "org_id", "agents", "policies"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "Manifest schema version"
+    },
+    "uapk_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,62}$",
+      "description": "Unique UAPK manifest identifier within the organization"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Human-readable name for this manifest"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Detailed description of the manifest purpose"
+    },
+    "org_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Organization UUID this manifest belongs to"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Optional legal jurisdiction (e.g., 'US', 'EU', 'GDPR')"
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "description": "List of agents governed by this manifest",
+      "items": {
+        "$ref": "#/$defs/agent"
+      }
+    },
+    "action_types": {
+      "type": "object",
+      "description": "Definitions of action types and their permissions per role",
+      "additionalProperties": {
+        "$ref": "#/$defs/action_type"
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "Named capability templates that can be granted to agents",
+      "additionalProperties": {
+        "$ref": "#/$defs/capability_template"
+      }
+    },
+    "policies": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Policy rules that govern agent behavior",
+      "items": {
+        "$ref": "#/$defs/policy"
+      }
+    },
+    "budgets": {
+      "$ref": "#/$defs/budgets",
+      "description": "Budget constraints for actions and spending"
+    },
+    "logging": {
+      "$ref": "#/$defs/logging_policy",
+      "description": "Logging and audit requirements"
+    },
+    "tools": {
+      "type": "object",
+      "description": "Registry of tools available to agents",
+      "additionalProperties": {
+        "$ref": "#/$defs/tool"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+",
+          "description": "Manifest version (semver)"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "contact": {
+          "type": "string",
+          "format": "email"
+        },
+        "documentation_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": ["agent_id", "role"],
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,62}$",
+          "description": "Unique agent identifier"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Human-readable agent name"
+        },
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{1,62}$",
+          "description": "Role assigned to this agent (determines permissions)"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of capability template names granted to this agent"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this agent is active"
+        }
+      }
+    },
+    "action_type": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$",
+          "description": "Action type identifier (e.g., 'email:send', 'db:query')"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "default": "medium"
+        },
+        "allowed_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Roles allowed to perform this action"
+        },
+        "denied_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Roles explicitly denied from this action"
+        },
+        "requires_approval": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether human approval is required"
+        },
+        "parameters_schema": {
+          "type": "object",
+          "description": "JSON Schema for action parameters"
+        }
+      }
+    },
+    "capability_template": {
+      "type": "object",
+      "required": ["name", "actions"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Capability template name"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$"
+          },
+          "description": "Actions included in this capability"
+        },
+        "constraints": {
+          "type": "object",
+          "properties": {
+            "max_actions_per_token": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_duration_hours": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "allowed_parameters": {
+              "type": "object",
+              "description": "Parameter restrictions"
+            }
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["policy_id", "name", "rules"],
+      "properties": {
+        "policy_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,62}$",
+          "description": "Unique policy identifier"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100,
+          "description": "Lower numbers are evaluated first"
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "agents": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Agent IDs this policy applies to (empty = all)"
+            },
+            "roles": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Roles this policy applies to (empty = all)"
+            },
+            "actions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Action patterns this policy applies to (empty = all)"
+            }
+          }
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/policy_rule"
+          }
+        }
+      }
+    },
+    "policy_rule": {
+      "type": "object",
+      "required": ["rule_id", "type", "effect"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{2,62}$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["rate_limit", "budget_limit", "time_window", "parameter_check", "approval_required", "custom"],
+          "description": "Type of rule"
+        },
+        "effect": {
+          "type": "string",
+          "enum": ["allow", "deny", "escalate"],
+          "description": "What happens when rule matches"
+        },
+        "condition": {
+          "type": "object",
+          "description": "Condition for the rule to trigger",
+          "properties": {
+            "threshold": {
+              "type": "number",
+              "description": "Numeric threshold (for rate/budget limits)"
+            },
+            "period": {
+              "type": "string",
+              "enum": ["minute", "hour", "day", "week", "month"],
+              "description": "Time period for rate limits"
+            },
+            "time_start": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$",
+              "description": "Start time (HH:MM)"
+            },
+            "time_end": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$",
+              "description": "End time (HH:MM)"
+            },
+            "timezone": {
+              "type": "string",
+              "description": "Timezone for time-based rules"
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Parameter conditions to check"
+            },
+            "expression": {
+              "type": "string",
+              "description": "Custom expression (for custom type)"
+            }
+          }
+        },
+        "escalation": {
+          "type": "object",
+          "description": "Escalation configuration (when effect is 'escalate')",
+          "properties": {
+            "notify": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "User IDs or emails to notify"
+            },
+            "timeout_minutes": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 60,
+              "description": "Timeout for approval"
+            },
+            "default_on_timeout": {
+              "type": "string",
+              "enum": ["allow", "deny"],
+              "default": "deny"
+            }
+          }
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Message to include in response/logs"
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "global": {
+          "$ref": "#/$defs/budget_limits",
+          "description": "Global budget limits for all agents"
+        },
+        "per_agent": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/budget_limits"
+          },
+          "description": "Budget limits per agent ID"
+        },
+        "per_role": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/budget_limits"
+          },
+          "description": "Budget limits per role"
+        }
+      }
+    },
+    "budget_limits": {
+      "type": "object",
+      "properties": {
+        "actions_per_minute": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actions_per_hour": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actions_per_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spend_per_day_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum spend per day in USD"
+        },
+        "spend_per_month_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum spend per month in USD"
+        },
+        "tokens_per_day": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum LLM tokens per day"
+        }
+      }
+    },
+    "logging_policy": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fields that must be included in logs"
+        },
+        "redact_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fields to redact from logs (e.g., 'password', 'ssn')"
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 90,
+          "description": "How long to retain logs"
+        },
+        "export_format": {
+          "type": "string",
+          "enum": ["json", "csv", "parquet"],
+          "default": "json"
+        },
+        "include_request_body": {
+          "type": "boolean",
+          "default": true
+        },
+        "include_response_body": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "connector_type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "connector_type": {
+          "type": "string",
+          "enum": ["http", "grpc", "websocket", "sdk", "mcp", "custom"],
+          "description": "Type of connector to use"
+        },
+        "config": {
+          "type": "object",
+          "description": "Tool configuration (non-sensitive)",
+          "properties": {
+            "base_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 30
+            },
+            "retry_count": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 3
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Static headers (no secrets!)"
+            }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "description": "References to secrets (NOT the secrets themselves)",
+          "properties": {
+            "api_key_ref": {
+              "type": "string",
+              "description": "Secret ID for API key"
+            },
+            "auth_token_ref": {
+              "type": "string",
+              "description": "Secret ID for auth token"
+            },
+            "credentials_ref": {
+              "type": "string",
+              "description": "Secret ID for credentials"
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$"
+          },
+          "description": "Actions this tool provides"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}

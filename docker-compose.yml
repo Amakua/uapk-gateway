@@ -1,0 +1,90 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - ./pyproject.toml:/app/../pyproject.toml:ro
+      - ./scripts:/app/../scripts:ro
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_FORMAT=console
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql+asyncpg://uapk:uapk@postgres:5432/uapk
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - RELOAD=true
+      - CORS_ORIGINS=["http://localhost:8000","http://localhost:3000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: uapk
+      POSTGRES_PASSWORD: uapk
+      POSTGRES_DB: uapk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uapk -d uapk"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # One-off migration runner
+  migrate:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend:/app
+      - ./pyproject.toml:/app/../pyproject.toml:ro
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://uapk:uapk@postgres:5432/uapk
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    profiles:
+      - tools
+
+  # Bootstrap script runner
+  bootstrap:
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend:/app
+      - ./pyproject.toml:/app/../pyproject.toml:ro
+      - ./scripts:/app/../scripts:ro
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://uapk:uapk@postgres:5432/uapk
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme123}
+      - ORG_NAME=${ORG_NAME:-Default Organization}
+      - ORG_SLUG=${ORG_SLUG:-default}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "../scripts/bootstrap.py"]
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/ui/logs?uapk_id={{ uapk_id }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+        &larr; Back to Logs
+    </a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+    <div>
+        <h1 style="margin-bottom: 0.5rem;">Chain Verification</h1>
+        <span style="font-family: monospace; color: var(--text-muted);">UAPK: {{ uapk_id }}</span>
+    </div>
+    {% if verification.is_valid %}
+    <span class="status-badge status-valid" style="font-size: 1rem; padding: 0.5rem 1rem;">
+        &#10003; Valid
+    </span>
+    {% else %}
+    <span class="status-badge status-invalid" style="font-size: 1rem; padding: 0.5rem 1rem;">
+        &#10007; Invalid
+    </span>
+    {% endif %}
+</div>
+
+<style>
+    .status-valid { background: #dcfce7; color: #166534; }
+    .status-invalid { background: #fee2e2; color: #991b1b; }
+    .verify-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .verify-stat {
+        text-align: center;
+    }
+    .verify-stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    .verify-stat-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    .hash-field {
+        font-family: monospace;
+        font-size: 0.75rem;
+        background: #f1f5f9;
+        padding: 0.5rem;
+        border-radius: 4px;
+        word-break: break-all;
+    }
+    .error-list {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    .error-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #fecaca;
+        font-size: 0.875rem;
+        color: #991b1b;
+    }
+    .error-item:last-child {
+        border-bottom: none;
+    }
+    .success-banner {
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .success-banner h2 {
+        color: #166534;
+        margin-bottom: 0.5rem;
+    }
+    .success-banner p {
+        color: #166534;
+        font-size: 0.875rem;
+    }
+</style>
+
+{% if verification.is_valid %}
+<div class="success-banner">
+    <h2>&#10003; Hash Chain Verified</h2>
+    <p>All {{ verification.record_count }} records have valid hashes, signatures, and chain links.</p>
+</div>
+{% else %}
+<div class="card" style="background: #fef2f2; border-color: #fecaca; margin-bottom: 1.5rem;">
+    <h2 style="color: #991b1b; margin-bottom: 0.5rem;">&#10007; Chain Verification Failed</h2>
+    <p style="color: #991b1b; font-size: 0.875rem;">
+        {{ verification.errors | length }} error(s) found. The audit log may have been tampered with.
+    </p>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="verify-card verify-stat">
+        <div class="verify-stat-value">{{ verification.record_count }}</div>
+        <div class="verify-stat-label">Records Verified</div>
+    </div>
+    <div class="verify-card verify-stat">
+        <div class="verify-stat-value {% if verification.is_valid %}style="color: var(--success);"{% else %}style="color: var(--danger);"{% endif %}">
+            {% if verification.is_valid %}&#10003;{% else %}&#10007;{% endif %}
+        </div>
+        <div class="verify-stat-label">Chain Integrity</div>
+    </div>
+    <div class="verify-card verify-stat">
+        <div class="verify-stat-value">{{ verification.errors | length }}</div>
+        <div class="verify-stat-label">Errors Found</div>
+    </div>
+</div>
+
+<!-- Chain Details -->
+<div class="verify-card">
+    <h3 style="margin-bottom: 1rem;">Chain Details</h3>
+
+    <div style="display: grid; gap: 1rem;">
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">First Record ID</div>
+            <div style="font-family: monospace;">{{ verification.first_record_id or 'N/A' }}</div>
+        </div>
+
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">Last Record ID</div>
+            <div style="font-family: monospace;">{{ verification.last_record_id or 'N/A' }}</div>
+        </div>
+
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">First Record Hash</div>
+            <div class="hash-field">{{ verification.first_record_hash or 'N/A' }}</div>
+        </div>
+
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">Last Record Hash</div>
+            <div class="hash-field">{{ verification.last_record_hash or 'N/A' }}</div>
+        </div>
+
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">Verified At</div>
+            <div>{{ verification.verified_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Errors -->
+{% if verification.errors %}
+<div class="verify-card">
+    <h3 style="color: #991b1b; margin-bottom: 1rem;">Verification Errors</h3>
+    <div class="error-list">
+        {% for error in verification.errors %}
+        <div class="error-item">{{ error }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+    <a href="/ui/logs?uapk_id={{ uapk_id }}" class="btn" style="
+        padding: 0.75rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+    ">View Records</a>
+
+    <a href="/ui/logs/export?uapk_id={{ uapk_id }}&format=json" class="btn" style="
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+    ">Export for Offline Verification</a>
+</div>
+{% endblock %}
