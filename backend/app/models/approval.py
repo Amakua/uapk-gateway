@@ -79,6 +79,29 @@ class Approval(Base):
     decided_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     decision_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Override token fields (for approved actions)
+    override_token_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+        index=True,
+        comment="SHA-256 hash of override token",
+    )
+    action_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+        comment="SHA-256 hash of action params (binds token to specific action)",
+    )
+    override_token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Override token expiration timestamp",
+    )
+    override_token_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Timestamp when override token was used",
+    )
+
     # Relationships
     organization: Mapped["Organization"] = relationship(  # noqa: F821
         "Organization",

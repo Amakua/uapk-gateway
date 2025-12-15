@@ -1,15 +1,17 @@
 """Gateway service - orchestrates evaluate and execute flows."""
 
+import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import (
     canonicalize_json,
+    compute_action_hash,
     compute_record_hash,
     compute_request_hash,
     compute_result_hash,
@@ -70,6 +72,97 @@ class GatewayService:
         self.db = db
         self.settings = get_settings()
         self.policy_engine = PolicyEngine(db)
+
+    async def _validate_override_token(
+        self,
+        org_id: UUID,
+        request: GatewayActionRequest,
+    ) -> tuple[bool, ReasonDetail | None]:
+        """Validate an override token from approval workflow.
+
+        Returns (is_valid, reason_if_invalid).
+
+        Checks:
+        1. Token hasn't been used before (replay attack protection)
+        2. Action hash matches the approved action
+        3. Token hasn't expired
+
+        If valid, records the token as used.
+        """
+        if not request.override_token:
+            return False, ReasonDetail(
+                code=ReasonCode.OVERRIDE_TOKEN_INVALID,
+                message="No override token provided",
+            )
+
+        # Hash the token for storage (don't store plaintext tokens)
+        token_hash = hashlib.sha256(request.override_token.encode()).hexdigest()
+
+        # Check if token has already been used
+        from app.models.approval import Approval
+
+        result = await self.db.execute(
+            select(Approval).where(
+                Approval.org_id == org_id,
+                Approval.override_token_hash == token_hash,
+            )
+        )
+        approval = result.scalar_one_or_none()
+
+        if not approval:
+            return False, ReasonDetail(
+                code=ReasonCode.OVERRIDE_TOKEN_INVALID,
+                message="Invalid override token",
+            )
+
+        # Check if token has already been used
+        if approval.override_token_used_at is not None:
+            return False, ReasonDetail(
+                code=ReasonCode.OVERRIDE_TOKEN_ALREADY_USED,
+                message="Override token has already been used",
+                details={"used_at": approval.override_token_used_at.isoformat()},
+            )
+
+        # Check if token has expired
+        if approval.override_token_expires_at and datetime.now(UTC) > approval.override_token_expires_at:
+            return False, ReasonDetail(
+                code=ReasonCode.OVERRIDE_TOKEN_EXPIRED,
+                message="Override token has expired",
+                details={"expired_at": approval.override_token_expires_at.isoformat()},
+            )
+
+        # Compute action hash and validate it matches
+        action_hash = compute_action_hash(
+            uapk_id=request.uapk_id,
+            agent_id=request.agent_id,
+            action_type=request.action.type,
+            tool=request.action.tool,
+            params=request.action.params,
+        )
+
+        if approval.action_hash != action_hash:
+            return False, ReasonDetail(
+                code=ReasonCode.OVERRIDE_TOKEN_ACTION_MISMATCH,
+                message="Override token does not match this action",
+                details={
+                    "expected_hash": approval.action_hash,
+                    "actual_hash": action_hash,
+                },
+            )
+
+        # Mark token as used
+        approval.override_token_used_at = datetime.now(UTC)
+        await self.db.flush()
+
+        logger.info(
+            "override_token_validated",
+            org_id=str(org_id),
+            approval_id=approval.approval_id,
+            uapk_id=request.uapk_id,
+            action_hash=action_hash[:16] + "...",
+        )
+
+        return True, None
 
     async def evaluate(
         self,
@@ -165,20 +258,81 @@ class GatewayService:
             agent_id=request.agent_id,
             action_type=request.action.type,
             tool=request.action.tool,
+            has_override_token=request.override_token is not None,
         )
 
-        # Build policy context
-        context = PolicyContext(
-            org_id=org_id,
-            uapk_id=request.uapk_id,
-            agent_id=request.agent_id,
-            action=request.action,
-            counterparty=request.counterparty,
-            capability_token=request.capability_token,
-        )
+        # Check for override token first (bypasses policy if valid)
+        if request.override_token:
+            is_valid, invalid_reason = await self._validate_override_token(org_id, request)
+            if is_valid:
+                # Override token is valid - bypass policy evaluation and execute directly
+                logger.info(
+                    "override_token_accepted",
+                    interaction_id=interaction_id,
+                    org_id=str(org_id),
+                    uapk_id=request.uapk_id,
+                )
 
-        # Evaluate policies
-        policy_result = await self.policy_engine.evaluate(context)
+                # Load manifest for execution
+                from app.gateway.policy_engine import PolicyResult
+                from app.models.uapk_manifest import ManifestStatus, UapkManifest
+
+                result = await self.db.execute(
+                    select(UapkManifest).where(
+                        UapkManifest.org_id == org_id,
+                        UapkManifest.uapk_id == request.uapk_id,
+                        UapkManifest.status == ManifestStatus.ACTIVE,
+                    )
+                )
+                manifest = result.scalar_one_or_none()
+
+                # Create a policy result for ALLOW
+                policy_result = PolicyResult(
+                    decision=GatewayDecision.ALLOW,
+                    reasons=[
+                        ReasonDetail(
+                            code=ReasonCode.OVERRIDE_TOKEN_VALID,
+                            message="Valid override token from approved action",
+                        )
+                    ],
+                    manifest=manifest,
+                    policy_trace=[],
+                    risk_indicators={},
+                )
+            else:
+                # Invalid override token - return DENY
+                logger.warning(
+                    "override_token_rejected",
+                    interaction_id=interaction_id,
+                    org_id=str(org_id),
+                    uapk_id=request.uapk_id,
+                    reason=invalid_reason.code.value if invalid_reason else "unknown",
+                )
+
+                # Create policy result for DENY
+                from app.gateway.policy_engine import PolicyResult
+
+                policy_result = PolicyResult(
+                    decision=GatewayDecision.DENY,
+                    reasons=[invalid_reason] if invalid_reason else [],
+                    manifest=None,
+                    policy_trace=[],
+                    risk_indicators={},
+                )
+        else:
+            # No override token - normal policy evaluation
+            # Build policy context
+            context = PolicyContext(
+                org_id=org_id,
+                uapk_id=request.uapk_id,
+                agent_id=request.agent_id,
+                action=request.action,
+                counterparty=request.counterparty,
+                capability_token=request.capability_token,
+            )
+
+            # Evaluate policies
+            policy_result = await self.policy_engine.evaluate(context)
 
         executed = False
         tool_result: ToolResult | None = None
