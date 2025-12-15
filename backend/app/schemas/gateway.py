@@ -22,8 +22,13 @@ class ReasonCode(str, Enum):
     # Allow reasons
     POLICY_PASSED = "policy_passed"
     ALL_CHECKS_PASSED = "all_checks_passed"
+    OVERRIDE_TOKEN_VALID = "override_token_valid"
 
     # Deny reasons
+    OVERRIDE_TOKEN_INVALID = "override_token_invalid"
+    OVERRIDE_TOKEN_ALREADY_USED = "override_token_already_used"
+    OVERRIDE_TOKEN_ACTION_MISMATCH = "override_token_action_mismatch"
+    OVERRIDE_TOKEN_EXPIRED = "override_token_expired"
     MANIFEST_NOT_FOUND = "manifest_not_found"
     MANIFEST_NOT_ACTIVE = "manifest_not_active"
     ACTION_TYPE_NOT_ALLOWED = "action_type_not_allowed"
@@ -99,6 +104,10 @@ class GatewayActionRequest(BaseModel):
     capability_token: str | None = Field(
         None,
         description="Optional capability token for additional authorization",
+    )
+    override_token: str | None = Field(
+        None,
+        description="Optional override token from approval workflow",
     )
     counterparty: CounterpartyInfo | None = Field(
         None,

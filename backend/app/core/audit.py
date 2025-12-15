@@ -81,6 +81,39 @@ def compute_result_hash(result_data: dict | None) -> str | None:
     return compute_hash(canonical)
 
 
+def compute_action_hash(
+    uapk_id: str,
+    agent_id: str,
+    action_type: str,
+    tool: str,
+    params: dict,
+) -> str:
+    """Compute hash of an action for override token binding.
+
+    This hash uniquely identifies a specific action request, allowing
+    override tokens to be bound to exact action parameters.
+
+    Args:
+        uapk_id: UAPK identifier
+        agent_id: Agent identifier
+        action_type: Type of action
+        tool: Tool being invoked
+        params: Action parameters
+
+    Returns:
+        Hex-encoded SHA-256 hash
+    """
+    action_data = {
+        "uapk_id": uapk_id,
+        "agent_id": agent_id,
+        "action_type": action_type,
+        "tool": tool,
+        "params": params,
+    }
+    canonical = canonicalize_json(action_data)
+    return compute_hash(canonical)
+
+
 def compute_record_hash(
     record_id: str,
     org_id: str,
