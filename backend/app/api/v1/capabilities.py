@@ -1,11 +1,12 @@
 """API endpoints for capability issuers and token issuance."""
 
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import CurrentUser, DbSession, RequireOrgAdmin, get_current_user, get_db
 from app.core.ed25519 import get_gateway_key_manager
 from app.models.user import User
 from app.schemas.capability_issuer import (
@@ -19,10 +20,10 @@ from app.schemas.capability_issuer import (
 from app.services import capability_issuer as issuer_service
 from app.services.capability_issuer import CapabilityIssuerError
 
-router = APIRouter(prefix="/capabilities", tags=["capabilities"])
+router = APIRouter(tags=["capabilities"])
 
 
-@router.get("/gateway-key", response_model=GatewayPublicKeyResponse)
+@router.get("/capabilities/gateway-key", response_model=GatewayPublicKeyResponse)
 async def get_gateway_public_key() -> GatewayPublicKeyResponse:
     """Get the gateway's public key for token verification.
 
@@ -32,16 +33,22 @@ async def get_gateway_public_key() -> GatewayPublicKeyResponse:
     key_manager = get_gateway_key_manager()
     return GatewayPublicKeyResponse(
         issuer_id="gateway",
-        public_key=key_manager.get_public_key_base64(),
+        public_key=key_manager.public_key_base64,  # FIXED: property, not method
         algorithm="EdDSA",
     )
 
 
-@router.post("/issuers", response_model=IssuerResponse, status_code=status.HTTP_201_CREATED)
+# Org-scoped routes
+org_router = APIRouter(prefix="/orgs/{org_id}/capabilities", tags=["capabilities"])
+
+
+@org_router.post("/issuers", response_model=IssuerResponse, status_code=status.HTTP_201_CREATED)
 async def register_issuer(
+    org_id: UUID,
     issuer_data: IssuerCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check - admin only
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> IssuerResponse:
     """Register a new capability issuer with public key.
 
@@ -51,17 +58,10 @@ async def register_issuer(
 
     Requires admin role.
     """
-    # TODO: Add admin role check when role system is implemented
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     try:
         return await issuer_service.register_issuer(
             db=db,
-            org_id=current_user.default_org_id,
+            org_id=org_id,
             issuer_data=issuer_data,
             user_id=current_user.id,
         )
@@ -72,48 +72,41 @@ async def register_issuer(
         )
 
 
-@router.get("/issuers", response_model=IssuerList)
+@org_router.get("/issuers", response_model=IssuerList)
 async def list_issuers(
+    org_id: UUID,
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check
     include_revoked: bool = False,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> IssuerList:
     """List capability issuers for the organization.
 
     Args:
+        org_id: Organization ID (from path)
         include_revoked: Include revoked issuers in the list
     """
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     issuers = await issuer_service.list_issuers(
         db=db,
-        org_id=current_user.default_org_id,
+        org_id=org_id,
         include_revoked=include_revoked,
     )
 
     return IssuerList(items=issuers, total=len(issuers))
 
 
-@router.get("/issuers/{issuer_id}", response_model=IssuerResponse)
+@org_router.get("/issuers/{issuer_id}", response_model=IssuerResponse)
 async def get_issuer(
+    org_id: UUID,
     issuer_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> IssuerResponse:
     """Get a capability issuer by ID."""
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     issuer = await issuer_service.get_issuer(
         db=db,
-        org_id=current_user.default_org_id,
+        org_id=org_id,
         issuer_id=issuer_id,
     )
 
@@ -126,11 +119,13 @@ async def get_issuer(
     return issuer
 
 
-@router.post("/issuers/{issuer_id}/revoke", response_model=IssuerResponse)
+@org_router.post("/issuers/{issuer_id}/revoke", response_model=IssuerResponse)
 async def revoke_issuer(
+    org_id: UUID,
     issuer_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check - admin only
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> IssuerResponse:
     """Revoke a capability issuer.
 
@@ -139,16 +134,10 @@ async def revoke_issuer(
 
     Requires admin role.
     """
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     try:
         return await issuer_service.revoke_issuer(
             db=db,
-            org_id=current_user.default_org_id,
+            org_id=org_id,
             issuer_id=issuer_id,
         )
     except CapabilityIssuerError as e:
@@ -158,11 +147,13 @@ async def revoke_issuer(
         )
 
 
-@router.post("/issue", response_model=IssueTokenResponse, status_code=status.HTTP_201_CREATED)
+@org_router.post("/issue", response_model=IssueTokenResponse, status_code=status.HTTP_201_CREATED)
 async def issue_token(
+    org_id: UUID,
     request: IssueTokenRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check - admin only
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> IssueTokenResponse:
     """Issue a capability token for an agent.
 
@@ -177,16 +168,10 @@ async def issue_token(
 
     Requires admin role.
     """
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     try:
         return await issuer_service.issue_capability_token(
             db=db,
-            org_id=current_user.default_org_id,
+            org_id=org_id,
             request=request,
             issuer_id="gateway",  # Gateway is the default issuer
         )
@@ -197,26 +182,22 @@ async def issue_token(
         )
 
 
-@router.get("/issuers/{issuer_id}/public-key")
+@org_router.get("/issuers/{issuer_id}/public-key")
 async def get_issuer_public_key(
+    org_id: UUID,
     issuer_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _: Annotated[None, Depends(RequireOrgAdmin)],  # RBAC check
+    db: DbSession,
+    current_user: CurrentUser,
 ) -> dict:
     """Get the public key for a specific issuer.
 
     This can be used by external systems to verify tokens
     issued by this issuer.
     """
-    if not current_user.default_org_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User must belong to an organization",
-        )
-
     issuer = await issuer_service.get_issuer(
         db=db,
-        org_id=current_user.default_org_id,
+        org_id=org_id,
         issuer_id=issuer_id,
     )
 
@@ -231,3 +212,7 @@ async def get_issuer_public_key(
         "public_key": issuer.public_key,
         "algorithm": "EdDSA",
     }
+
+
+# Include both routers
+router.include_router(org_router)

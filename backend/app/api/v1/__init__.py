@@ -3,7 +3,6 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
-    actions,
     api_keys,
     approvals,
     auth,
@@ -32,7 +31,6 @@ router.include_router(memberships.router)
 router.include_router(api_keys.router)
 
 # UAPK core routes
-router.include_router(actions.router)
 router.include_router(manifests.router)
 router.include_router(policies.router)
 router.include_router(capability_tokens.router)

@@ -1,0 +1,249 @@
+/* UAPK Gateway Documentation Styles */
+
+:root {
+  --md-primary-fg-color: #4f46e5;
+  --md-primary-fg-color--light: #6366f1;
+  --md-primary-fg-color--dark: #3730a3;
+  --md-accent-fg-color: #7c3aed;
+}
+
+/* Hero section on home page */
+.md-content .hero {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #4f46e5 100%);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.md-content .hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.md-content .hero p {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Feature cards */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-typeset-table-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Pricing cards */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.pricing-card {
+  background: var(--md-code-bg-color);
+  border: 2px solid var(--md-typeset-table-color);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.pricing-card.featured {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+}
+
+.pricing-card .price {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+}
+
+.pricing-card .period {
+  color: var(--md-typeset-color);
+  opacity: 0.7;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.denied {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Architecture diagrams */
+.mermaid {
+  background: transparent !important;
+}
+
+/* Code blocks with annotations */
+.md-typeset .annotate > pre > code::after {
+  content: none;
+}
+
+/* API endpoint styling */
+.api-method {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
+}
+
+.api-method.get {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.api-method.post {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.api-method.put {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.api-method.delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Roadmap timeline */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--md-primary-fg-color);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--md-primary-fg-color);
+  border: 2px solid var(--md-default-bg-color);
+}
+
+/* Quick links grid */
+.quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.quick-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--md-code-bg-color);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.quick-links a:hover {
+  background: var(--md-typeset-table-color);
+}
+
+/* Warning/tip boxes */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #10b981;
+}
+
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Terminal-style code blocks */
+.terminal pre {
+  background: #1e1e2e !important;
+  border-radius: 8px;
+  padding: 1rem !important;
+}
+
+.terminal pre code {
+  color: #cdd6f4 !important;
+}
+
+/* Pilot CTA button */
+.md-button--pilot {
+  background-color: #7c3aed !important;
+  color: white !important;
+  font-weight: 600;
+  border: none;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.md-button--pilot:hover {
+  background-color: #6d28d9 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
