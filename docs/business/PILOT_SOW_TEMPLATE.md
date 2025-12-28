@@ -220,7 +220,7 @@ Email: ____________________
 Phone: ____________________
 
 **Escalation Contact (Vendor):**
-Email: `pilots@uapk.dev` or see `SECURITY.md`
+Email: `pilots@uapk.info` or see `SECURITY.md`
 
 ---
 

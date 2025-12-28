@@ -21,7 +21,7 @@ UAPK Gateway is designed for high-stakes environments. We take security seriousl
 
     ---
 
-    Navigate to [https://github.com/Amakua/uapk-core/security/advisories](https://github.com/Amakua/uapk-core/security/advisories) and click "Report a vulnerability"
+    Navigate to [https://github.com/uapk/gateway/security/advisories](https://github.com/uapk/gateway/security/advisories) and click "Report a vulnerability"
 
 -   :material-email: **Email**
 
@@ -102,7 +102,7 @@ Role-based access control for organizations
 
 - **Tamper-evident logs:** Hash-chained interaction records
 - **Gateway signatures:** Ed25519 signatures on log entries
-- **Chain verification:** Standalone verification scripts ([verify_log_chain.py](https://github.com/Amakua/uapk-core/blob/main/backend/scripts/verify_log_chain.py))
+- **Chain verification:** Standalone verification scripts ([verify_log_chain.py](https://github.com/uapk/gateway/blob/main/backend/scripts/verify_log_chain.py))
 - **Immutable records:** No deletion, only archival
 
 ---
@@ -236,7 +236,7 @@ See [Threat Model](threat-model.md) for detailed threat analysis.
 
 | Standard | Status | Notes |
 |----------|--------|-------|
-| **SOC2** | Planned | Target: Q2 2025 |
+| **SOC2** | Planned | Timeline available on request |
 | **ISO 27001** | Under consideration | - |
 | **GDPR** | Ready | Self-hosted deployment supports GDPR compliance (data residency) |
 | **HIPAA** | Framework-ready | Self-hosted deployment + proper configuration |
@@ -249,7 +249,7 @@ See [Compliance Documentation](data-handling.md) for details.
 
 Published security advisories will be listed here:
 
-- [GitHub Security Advisories](https://github.com/Amakua/uapk-core/security/advisories)
+- [GitHub Security Advisories](https://github.com/uapk/gateway/security/advisories)
 
 **Subscribe:** Watch the repository and enable "Security alerts" notifications.
 
@@ -277,7 +277,7 @@ We thank security researchers who responsibly disclose vulnerabilities:
 
 ## Legal Disclaimer
 
-This software is provided "as is" without warranty of any kind. See [LICENSE](https://github.com/Amakua/uapk-core/blob/main/LICENSE) for full terms.
+This software is provided "as is" without warranty of any kind. See [LICENSE](https://github.com/uapk/gateway/blob/main/LICENSE) for full terms.
 
 **You are responsible for:**
 - Securing your deployment
@@ -292,7 +292,7 @@ UAPK Gateway is a tool for governance and audit, but **you** own the compliance 
 ## Contact
 
 - **Security reports:** [mail@uapk.info](mailto:mail@uapk.info) (include "SECURITY" in subject)
-- **GitHub Security Advisories:** [https://github.com/Amakua/uapk-core/security/advisories](https://github.com/Amakua/uapk-core/security/advisories)
+- **GitHub Security Advisories:** [https://github.com/uapk/gateway/security/advisories](https://github.com/uapk/gateway/security/advisories)
 - **Response SLA:** 48 hours for security reports
 
 ---

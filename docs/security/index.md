@@ -108,7 +108,7 @@ flowchart TB
 If you discover a security vulnerability:
 
 1. **Do not** open a public GitHub issue
-2. Email security@uapk.dev with details
+2. Email security@uapk.info with details
 3. Include steps to reproduce if possible
 4. We'll respond within 48 hours
 

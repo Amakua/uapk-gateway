@@ -5,6 +5,8 @@ description: What's coming in UAPK Gateway
 
 # Roadmap
 
+**Last updated:** 2025-12-28
+
 Our public roadmap for UAPK Gateway. We prioritize based on customer feedback and market needs.
 
 ## Current Version: v0.1
@@ -23,7 +25,7 @@ The current release includes core functionality:
 
 ### v0.2 - Enhanced Workflows
 
-*Target: Q1 2025*
+*Target: 2026 H1*
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -35,7 +37,7 @@ The current release includes core functionality:
 
 ### v0.3 - Advanced Policy
 
-*Target: Q2 2025*
+*Target: 2026 H1*
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -47,7 +49,7 @@ The current release includes core functionality:
 
 ## Planned Features
 
-### Q3 2025
+### 2026 H2
 
 #### Analytics & Reporting
 
@@ -64,7 +66,7 @@ The current release includes core functionality:
 - ServiceNow integration
 - Custom webhooks
 
-### Q4 2025
+### 2026 H2
 
 #### Enterprise Features
 
@@ -125,14 +127,14 @@ We prioritize features based on:
 
 Have an idea? We'd love to hear it!
 
-- **GitHub**: [Open a feature request](https://github.com/uapk/gateway/issues/new?template=feature_request.md)
-- **Email**: [features@uapk.dev](mailto:features@uapk.dev)
+- **GitHub**: [Open a feature request](https://github.com/uapk/gateway/issues/new)
+- **Email**: [features@uapk.info](mailto:features@uapk.info)
 - **Enterprise**: Contact your Customer Success Manager
 
 ## Stay Updated
 
 - **Changelog**: [github.com/uapk/gateway/releases](https://github.com/uapk/gateway/releases)
-- **Blog**: [blog.uapk.dev](https://blog.uapk.dev)
+- **Blog**: [blog.uapk.info](https://blog.uapk.info)
 - **Twitter**: [@uapkdev](https://twitter.com/uapkdev)
 - **Newsletter**: [Subscribe](#)
 
@@ -140,10 +142,10 @@ Have an idea? We'd love to hear it!
 
 | Version | Target | Theme |
 |---------|--------|-------|
-| v0.2 | Q1 2025 | Enhanced Workflows |
-| v0.3 | Q2 2025 | Advanced Policy |
-| v0.4 | Q3 2025 | Analytics & Integrations |
-| v1.0 | Q4 2025 | Enterprise Ready |
+| v0.2 | 2026 H1 | Enhanced Workflows |
+| v0.3 | 2026 H1 | Advanced Policy |
+| v0.4 | 2026 H2 | Analytics & Integrations |
+| v1.0 | 2026 (date TBD) | Enterprise Ready |
 
 !!! info "Dates are Estimates"
     Release dates are targets and may change based on development progress and customer feedback.

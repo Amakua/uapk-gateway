@@ -49,7 +49,7 @@ Get the help you need to successfully deploy and operate UAPK Gateway.
     - Custom SLA
     - Quarterly reviews
 
-    [Contact Sales](mailto:sales@uapk.dev){ .md-button }
+    [Contact Sales](mailto:sales@uapk.info){ .md-button }
 
 </div>
 
@@ -106,7 +106,7 @@ For bug reports and feature requests:
 
 For Pro and Enterprise customers:
 
-- **Pro**: support@uapk.dev
+- **Pro**: support@uapk.info
 - **Enterprise**: Dedicated email address
 
 Include in your request:
@@ -181,7 +181,7 @@ Comprehensive documentation for all features:
 
 Monitor service status:
 
-- [status.uapk.dev](https://status.uapk.dev)
+- [status.uapk.info](https://status.uapk.info)
 - Subscribe to updates
 - Incident history
 
@@ -226,10 +226,10 @@ Stay updated on releases:
 
 | Need | Contact |
 |------|---------|
-| Sales | [sales@uapk.dev](mailto:sales@uapk.dev) |
-| Support | [support@uapk.dev](mailto:support@uapk.dev) |
-| Security | [security@uapk.dev](mailto:security@uapk.dev) |
-| Partnerships | [partners@uapk.dev](mailto:partners@uapk.dev) |
+| Sales | [sales@uapk.info](mailto:sales@uapk.info) |
+| Support | [support@uapk.info](mailto:support@uapk.info) |
+| Security | [security@uapk.info](mailto:security@uapk.info) |
+| Partnerships | [partners@uapk.info](mailto:partners@uapk.info) |
 
 ## Related
 

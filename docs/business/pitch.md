@@ -13,7 +13,7 @@ hide:
 Deploy AI agents with **hard guardrails**, **human approvals**, and **evidence-grade audit logs** that satisfy regulators and courts.
 
 [Start Pilot Program →](pilot.md){ .md-button .md-button--pilot }
-[View GitHub →](https://github.com/Amakua/uapk-core){ .md-button }
+[View GitHub →](https://github.com/uapk/gateway){ .md-button }
 </div>
 
 ---
@@ -273,11 +273,11 @@ Pilots start fast. Most customers go live in 2-4 weeks.
 **Commercial inquiries:**
 
 - **Email:** [mail@uapk.info](mailto:mail@uapk.info)
-- **GitHub:** Open an issue labeled `commercial` at [https://github.com/Amakua/uapk-core/issues](https://github.com/Amakua/uapk-core/issues)
+- **GitHub:** Open an issue labeled `commercial` at [https://github.com/uapk/gateway/issues](https://github.com/uapk/gateway/issues)
 
 **Open source:**
 
-- **Repo:** [https://github.com/Amakua/uapk-core](https://github.com/Amakua/uapk-core)
+- **Repo:** [https://github.com/uapk/gateway](https://github.com/uapk/gateway)
 - **Docs:** See `docs/` directory
 - **License:** Apache-2.0 (self-hostable, no strings attached)
 
@@ -293,7 +293,7 @@ Pilots start fast. Most customers go live in 2-4 weeks.
 [:material-rocket-launch: Start Pilot](pilot.md)
 [:material-currency-usd: View Pricing](pricing.md)
 [:material-book-open-variant: Read Docs](../index.md)
-[:material-github: View Source](https://github.com/Amakua/uapk-core)
+[:material-github: View Source](https://github.com/uapk/gateway)
 </div>
 
 ---

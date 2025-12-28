@@ -21,7 +21,7 @@ Deploy autonomous AI agents with **hard guardrails**, **human approvals**, and *
 
 [Start Pilot Program :material-rocket-launch:](business/pilot.md){ .md-button .md-button--pilot }
 [Self-Host (Open Source) :material-download:](quickstart.md){ .md-button .md-button--primary }
-[View on GitHub :material-github:](https://github.com/Amakua/uapk-core){ .md-button }
+[View on GitHub :material-github:](https://github.com/uapk/gateway){ .md-button }
 </div>
 
 > Agents don't "do" things directly. They **propose actions**.
@@ -168,8 +168,8 @@ Docker Compose deployment on one VM, self-hosted, no vendor lock-in
 
     ```bash
     # Clone and start
-    git clone https://github.com/Amakua/uapk-core.git
-    cd uapk-core
+    git clone https://github.com/uapk/gateway.git
+    cd gateway
     make dev
 
     # Set up database

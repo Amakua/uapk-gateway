@@ -61,7 +61,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** Prevents unauthorized settlements, ensures legal review for high-value cases
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/legal/ip_enforcement_settlement_gate.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/legal/ip_enforcement_settlement_gate.json)
 </div>
 
 <div class="feature-card" markdown>
@@ -76,7 +76,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** Prevents abuse, ensures legal compliance, protects brand reputation
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/legal/takedown_notice_gate.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/legal/takedown_notice_gate.json)
 </div>
 
 </div>
@@ -99,7 +99,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** Prevents runaway trading, ensures risk management, regulatory compliance
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/finance/trading_execution_gate.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/finance/trading_execution_gate.json)
 </div>
 
 <div class="feature-card" markdown>
@@ -137,7 +137,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** Third-party risk management, compliance, procurement controls
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/compliance/vendor_due_diligence_gate.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/compliance/vendor_due_diligence_gate.json)
 </div>
 
 <div class="feature-card" markdown>
@@ -152,7 +152,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** AML/BSA compliance, fraud prevention, audit trails
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/compliance/kyc_onboarding_gate.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/compliance/kyc_onboarding_gate.json)
 </div>
 
 </div>
@@ -173,7 +173,7 @@ We've built pre-configured templates ("47ers") for common high-stakes workflows.
 
 **Why:** Prevents spam, protects customer relationships, GDPR compliance
 
-[View Template →](https://github.com/Amakua/uapk-core/tree/main/examples/47ers/general/outbound_email_guard.json)
+[View Template →](https://github.com/uapk/gateway/tree/main/examples/47ers/general/outbound_email_guard.json)
 </div>
 
 ---
@@ -295,7 +295,7 @@ UAPK Gateway is designed for regulated environments:
 
     ---
 
-    SOC2 roadmap (Q2 2025), GDPR-ready (self-hosted), audit export bundles
+    SOC 2 readiness: evidence pack + control mapping available. SOC 2 audit timeline: on request. GDPR-ready (self-hosted), audit export bundles.
 
 -   :material-account-lock: **Access Controls**
 
